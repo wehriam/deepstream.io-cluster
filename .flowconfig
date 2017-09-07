@@ -1,0 +1,12 @@
+[ignore]
+
+.*bower.*
+.*/node_modules/deepstream.io/test/.*
+
+[include]
+
+[libs]
+
+[options]
+
+suppress_comment=.*\\$FlowNewLine
