@@ -267,7 +267,6 @@ describe('Cluster', function () {
         }
       });
     });
-    await new Promise((resolve) => setTimeout(resolve, 1000));
     await clientD.shutdown();
     await serverD.shutdown();
     clientA.record.unlisten('listen/*');
