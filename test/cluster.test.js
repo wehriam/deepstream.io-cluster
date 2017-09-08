@@ -1,6 +1,7 @@
 // @flow
 
 const uuid = require('uuid');
+const { expect } = require('chai');
 const { getServer } = require('./lib/server');
 const { getClient } = require('./lib/client');
 
@@ -14,6 +15,9 @@ const NANOMSG_PIPELINE_PORT_B = 7022;
 const DEEPSTREAM_PORT_C = 8020;
 const NANOMSG_PUBSUB_PORT_C = 8021;
 const NANOMSG_PIPELINE_PORT_C = 8022;
+const DEEPSTREAM_PORT_D = 9020;
+const NANOMSG_PUBSUB_PORT_D = 9021;
+const NANOMSG_PIPELINE_PORT_D = 9022;
 
 describe('Cluster', function () {
   this.timeout(10000);
@@ -24,34 +28,35 @@ describe('Cluster', function () {
   let clientB;
   let clientC;
 
+  const seedServerAddress = {
+    host: HOST,
+    pubsubPort: NANOMSG_PUBSUB_PORT_A,
+    pipelinePort: NANOMSG_PIPELINE_PORT_A,
+  };
+
   before(async () => {
-    const seedServerAddress = {
-      host: HOST,
-      pubsubPort: parseInt(NANOMSG_PUBSUB_PORT_A, 10),
-      pipelinePort: parseInt(NANOMSG_PIPELINE_PORT_A, 10),
-    };
     [serverA, serverB, serverC] = await Promise.all([
       getServer(
         'server-A',
         HOST,
-        parseInt(DEEPSTREAM_PORT_A, 10),
-        parseInt(NANOMSG_PUBSUB_PORT_A, 10),
-        parseInt(NANOMSG_PIPELINE_PORT_A, 10),
+        DEEPSTREAM_PORT_A,
+        NANOMSG_PUBSUB_PORT_A,
+        NANOMSG_PIPELINE_PORT_A,
       ),
       getServer(
         'server-B',
         HOST,
-        parseInt(DEEPSTREAM_PORT_B, 10),
-        parseInt(NANOMSG_PUBSUB_PORT_B, 10),
-        parseInt(NANOMSG_PIPELINE_PORT_B, 10),
+        DEEPSTREAM_PORT_B,
+        NANOMSG_PUBSUB_PORT_B,
+        NANOMSG_PIPELINE_PORT_B,
         [seedServerAddress],
       ),
       getServer(
         'server-C',
         HOST,
-        parseInt(DEEPSTREAM_PORT_C, 10),
-        parseInt(NANOMSG_PUBSUB_PORT_C, 10),
-        parseInt(NANOMSG_PIPELINE_PORT_C, 10),
+        DEEPSTREAM_PORT_C,
+        NANOMSG_PUBSUB_PORT_C,
+        NANOMSG_PIPELINE_PORT_C,
         [seedServerAddress],
       ),
     ]);
@@ -68,11 +73,9 @@ describe('Cluster', function () {
       clientB.shutdown(),
       clientC.shutdown(),
     ]);
-    await Promise.all([
-      serverA.shutdown(),
-      serverB.shutdown(),
-      serverC.shutdown(),
-    ]);
+    await serverA.shutdown();
+    await serverB.shutdown();
+    await serverC.shutdown();
   });
 
   it('Should share record state.', async () => {
@@ -114,13 +117,13 @@ describe('Cluster', function () {
     });
     await new Promise((resolve) => setTimeout(resolve, 500));
     await new Promise((resolve, reject) => {
-      const prefixA = uuid.v4();
-      clientB.rpc.make(name, prefixA, (errorMessage, result) => {
+      const prefixB = uuid.v4();
+      clientB.rpc.make(name, prefixB, (errorMessage, result) => {
         if (errorMessage) {
           reject(new Error(errorMessage));
           return;
         }
-        if (result !== prefixA + value) {
+        if (result !== prefixB + value) {
           reject(new Error('RPC value does not match'));
           return;
         }
@@ -148,14 +151,13 @@ describe('Cluster', function () {
       recordB.subscribe((data) => {
         if (data.value === value) {
           recordB.unsubscribe();
+          recordB.on('discard', resolve);
           recordB.discard();
-          resolve();
         }
       });
     });
     clientA.record.unlisten('listen/*');
   });
-
 
   it('Should listen for events.', async () => {
     const name = `event-${uuid.v4()}`;
@@ -173,12 +175,102 @@ describe('Cluster', function () {
   });
 
   it('Should share presence.', async () => {
-    await new Promise((resolve) => {
-      clientC.presence.getAll((usernames) => {
-        console.log(usernames);
+    const usernamesA = await new Promise((resolve) => clientA.presence.getAll(resolve));
+    const usernamesB = await new Promise((resolve) => clientB.presence.getAll(resolve));
+    const usernamesC = await new Promise((resolve) => clientC.presence.getAll(resolve));
+    expect(usernamesA).to.include.members(['client-B', 'client-C']);
+    expect(usernamesB).to.include.members(['client-A', 'client-C']);
+    expect(usernamesC).to.include.members(['client-A', 'client-B']);
+  });
+
+  it('Should sync presence with a new server.', async () => {
+    const serverD = await getServer(
+      'server-D',
+      HOST,
+      DEEPSTREAM_PORT_D,
+      NANOMSG_PUBSUB_PORT_D,
+      NANOMSG_PIPELINE_PORT_D,
+      [seedServerAddress],
+    );
+    await new Promise((resolve) => setTimeout(resolve, 1000));
+    const clientD = await getClient(`${HOST}:${DEEPSTREAM_PORT_D}`, 'client-D');
+    const usernamesD = await new Promise((resolve) => clientD.presence.getAll(resolve));
+    expect(usernamesD).to.include.members(['client-A', 'client-B', 'client-C']);
+    await clientD.shutdown();
+    await serverD.shutdown();
+  });
+
+  it('Should sync RPC calls with a new server.', async () => {
+    const name = `rpc-${uuid.v4()}`;
+    const value = `rpc-prefix-${uuid.v4()}`;
+    clientA.rpc.provide(name, (data:string, response:{send: Function}) => {
+      response.send(data + value);
+    });
+    const serverD = await getServer(
+      'server-D',
+      HOST,
+      DEEPSTREAM_PORT_D,
+      NANOMSG_PUBSUB_PORT_D,
+      NANOMSG_PIPELINE_PORT_D,
+      [seedServerAddress],
+    );
+    await new Promise((resolve) => setTimeout(resolve, 1000));
+    const clientD = await getClient(`${HOST}:${DEEPSTREAM_PORT_D}`, 'client-D');
+    await new Promise((resolve, reject) => {
+      const prefixD = uuid.v4();
+      clientD.rpc.make(name, prefixD, (errorMessage, result) => {
+        if (errorMessage) {
+          reject(new Error(errorMessage));
+          return;
+        }
+        if (result !== prefixD + value) {
+          reject(new Error('RPC value does not match'));
+          return;
+        }
         resolve();
       });
     });
+    await clientD.shutdown();
+    await serverD.shutdown();
+    clientA.rpc.unprovide(name);
+  });
+
+  it('Should sync listeners with a new server.', async () => {
+    const name = `listen/${uuid.v4()}`;
+    const value = `listen-response-${uuid.v4()}`;
+    clientA.record.listen('listen/*', (match, isSubscribed, response) => {
+      if (!isSubscribed) {
+        return;
+      }
+      const recordA = clientA.record.getRecord(match);
+      response.accept();
+      recordA.set({ value }, () => {
+        recordA.discard();
+      });
+    });
+    const serverD = await getServer(
+      'server-D',
+      HOST,
+      DEEPSTREAM_PORT_D,
+      NANOMSG_PUBSUB_PORT_D,
+      NANOMSG_PIPELINE_PORT_D,
+      [seedServerAddress],
+    );
+    const clientD = await getClient(`${HOST}:${DEEPSTREAM_PORT_D}`, 'client-D');
+    await new Promise((resolve) => {
+      const recordD = clientD.record.getRecord(name);
+      recordD.subscribe((data) => {
+        if (data.value === value) {
+          recordD.unsubscribe();
+          recordD.discard();
+          resolve();
+        }
+      });
+    });
+    await new Promise((resolve) => setTimeout(resolve, 1000));
+    await clientD.shutdown();
+    await serverD.shutdown();
+    clientA.record.unlisten('listen/*');
   });
 });
 

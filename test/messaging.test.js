@@ -11,7 +11,7 @@ const sinonChai = require('sinon-chai');
 const ClusterNode = require('../src/cluster-node');
 
 chai.use(sinonChai);
-const expect = chai.expect;
+const { expect } = chai;
 
 const HOST = '127.0.0.1';
 const NANOMSG_PUBSUB_PORT_A = 7789;
@@ -23,20 +23,20 @@ const NANOMSG_PIPELINE_PORT_C = 8989;
 
 const addressA = {
   host: HOST,
-  pubsubPort: parseInt(NANOMSG_PUBSUB_PORT_A, 10),
-  pipelinePort: parseInt(NANOMSG_PIPELINE_PORT_A, 10),
+  pubsubPort: NANOMSG_PUBSUB_PORT_A,
+  pipelinePort: NANOMSG_PIPELINE_PORT_A,
 };
 
 const addressB = {
   host: HOST,
-  pubsubPort: parseInt(NANOMSG_PUBSUB_PORT_B, 10),
-  pipelinePort: parseInt(NANOMSG_PIPELINE_PORT_B, 10),
+  pubsubPort: NANOMSG_PUBSUB_PORT_B,
+  pipelinePort: NANOMSG_PIPELINE_PORT_B,
 };
 
 const addressC = {
   host: HOST,
-  pubsubPort: parseInt(NANOMSG_PUBSUB_PORT_C, 10),
-  pipelinePort: parseInt(NANOMSG_PIPELINE_PORT_C, 10),
+  pubsubPort: NANOMSG_PUBSUB_PORT_C,
+  pipelinePort: NANOMSG_PIPELINE_PORT_C,
 };
 
 const messageTimeout = () => new Promise((resolve) => setTimeout(resolve, 20));
@@ -68,11 +68,9 @@ describe('Messages are sent between multiple instances', () => {
   const callbackC = sinon.spy();
 
   before(async () => {
-    [nodeA, nodeB, nodeC] = await Promise.all([
-      getNode('node-A', addressA, []),
-      getNode('node-B', addressB, [addressA]),
-      getNode('node-C', addressC, [addressA]),
-    ]);
+    nodeA = await getNode('node-A', addressA, []);
+    nodeB = await getNode('node-B', addressB, [addressA]);
+    nodeC = await getNode('node-C', addressC, [addressA]);
   });
 
   it('subscribes to a topic', async () => {
@@ -104,6 +102,7 @@ describe('Messages are sent between multiple instances', () => {
     expect(callbackB).to.have.been.calledWith({ other: 'value' });
     expect(callbackC).to.have.been.calledWith({ some: 'data' });
   });
+
 
   it('nodeA and nodeC send messages at the same time', async () => {
     nodeA.send('topic1', { val: 'x' });
@@ -153,6 +152,7 @@ describe('Messages are sent between multiple instances', () => {
         throw e;
       }).to.throw(/ClusterNode already closed/);
     }
+    await messageTimeout();
   });
 
   it('nodeA and nodeC close gracefuly.', async () => {

@@ -4,9 +4,9 @@
 // https://github.com/deepstreamIO/deepstream.io-msg-connector-template
 
 const uuid = require('uuid');
-const { expect } = require('chai');
 const { EventEmitter } = require('events');
 const ClusterNode = require('../src/cluster-node');
+const { expect } = require('chai');
 
 describe('The cluster node adapter has the correct structure', () => {
   let clusterNode;

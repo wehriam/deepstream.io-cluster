@@ -4,11 +4,13 @@ Community supported clustering for [deepstream.io](https://github.com/deepstream
 
 ## Usage:
 
+The `deepstream.io-cluster` extends the base `deepstream.io' module and inherits all other setup parameters.
+
 ### Server A, 192.168.1.1
 
 ```js
 
-const Deepstream = require('deepstream.io-cluster);
+const Deepstream = require('deepstream.io-cluster');
 
 const server = new Deepstream();
 
@@ -18,7 +20,7 @@ const server = new Deepstream();
 
 ```js
 
-const Deepstream = require('deepstream.io-cluster);
+const Deepstream = require('deepstream.io-cluster');
 
 const server = new Deepstream({
   cluster: {
@@ -36,7 +38,7 @@ const server = new Deepstream({
 
 ```js
 
-const Deepstream = require('deepstream.io-cluster);
+const Deepstream = require('deepstream.io-cluster');
 
 const server = new Deepstream({
   cluster: {

@@ -48,7 +48,13 @@ module.exports = class DistributedStateRegistry extends EventEmitter {
 
   removeAll(serverName:string):void {
     Object.keys(this.data).forEach((name) => {
-      this.remove(name, serverName);
+      if (!this.data[name]) {
+        return;
+      }
+      this.data[name].delete(serverName);
+      if (this.data[name].size === 0) {
+        delete this.data[name];
+      }
     });
   }
 
