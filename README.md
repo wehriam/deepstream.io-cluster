@@ -26,7 +26,7 @@ const server = new Deepstream({
   cluster: {
     peerAddresses: [
       {
-        host: "192.168.1.1"
+        host: '192.168.1.1'
       }
     ]
   },
@@ -44,7 +44,7 @@ const server = new Deepstream({
   cluster: {
     peerAddresses: [
       {
-        host: "192.168.1.1"
+        host: '192.168.1.1'
       }
     ]
   },
@@ -56,18 +56,18 @@ const server = new Deepstream({
 
 ```js
 
-const Deepstream = require('deepstream.io-cluster);
+const Deepstream = require('deepstream.io-cluster');
 
 const server = new Deepstream({
   cluster: {
     bindAddress: {
-      host: "127.0.0.1", // Optional, default "127.0.0.1"
+      host: '127.0.0.1', // Optional, default '127.0.0.1'
       pubsubPort: 6021, // Optional, default 6021
       pipelinePort: 6022, // Optional, default 6022
     },
     peerAddresses: [
       {
-        host: "127.0.0.1", // Required
+        host: '127.0.0.1', // Required
         pubsubPort: 6021, // Optional, default 6021
         pipelinePort: 6022, // Optional, default 6022
       }
