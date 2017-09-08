@@ -2,7 +2,7 @@
   "name": "deepstream.io-cluster",
   "version": "0.2.2",
   "description": "Community supported clustering for Deepstream.io",
-  "main": "dist/message-connector.js",
+  "main": "dist/index.js",
   "scripts": {
     "build": "rm -rf ./dist; flow-remove-types ./src --out-dir ./dist;",
     "lint": "yarn lint:js && yarn lint:flow",
