@@ -1,10 +1,12 @@
 ## Deepstream.io Cluster
 ----------------------------------------------
-Community supported clustering for [deepstream.io](https://github.com/deepstreamIO/deepstream.io). Based on (Nanomsg)[http://nanomsg.org/].
+Community supported clustering for [deepstream.io](https://github.com/deepstreamIO/deepstream.io). Based on [Nanomsg](http://nanomsg.org/).
 
 ## Usage:
 
-The `deepstream.io-cluster` extends the base `deepstream.io' module and inherits all other setup parameters.
+The `deepstream.io-cluster` module extends the base `deepstream.io`.
+
+Peers bootstrap off of each other.
 
 ### Server A, 192.168.1.1
 
