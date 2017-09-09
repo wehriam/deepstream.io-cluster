@@ -351,6 +351,12 @@ class ClusterNode extends events.EventEmitter {
       push.close();
     });
   }
+
+  getPeers(): Array<SocketSettings & {serverName: string}> {
+    return Object.keys(this.peerSocketHashes).map((socketHash) => Object.assign({}, {
+      serverName: socketHash.split('/').shift(),
+    }, getSocketSettings(socketHash)));
+  }
 }
 
 module.exports = ClusterNode;

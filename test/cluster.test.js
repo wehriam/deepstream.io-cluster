@@ -299,5 +299,33 @@ describe('Cluster', function () {
     await clientD.shutdown();
     await serverD.shutdown();
   });
+
+  it('Should add and remove peers.', async () => {
+    const beforePeers = serverA.getPeers().map((peer) => peer.serverName);
+    expect(beforePeers).to.eql(['server-B', 'server-C']);
+    const serverD = await getServer(
+      'server-D',
+      HOST,
+      DEEPSTREAM_PORT_D,
+      NANOMSG_PUBSUB_PORT_D,
+      NANOMSG_PIPELINE_PORT_D,
+    );
+    serverA.addPeer({
+      host: HOST,
+      pubsubPort: NANOMSG_PUBSUB_PORT_D,
+      pipelinePort: NANOMSG_PIPELINE_PORT_D,
+    });
+    await new Promise((resolve) => setTimeout(resolve, 1000));
+    const peers = serverA.getPeers().map((peer) => peer.serverName);
+    expect(peers).to.eql(['server-B', 'server-C', 'server-D']);
+    await serverD.shutdown();
+    await serverA.removePeer({
+      host: HOST,
+      pubsubPort: NANOMSG_PUBSUB_PORT_D,
+      pipelinePort: NANOMSG_PIPELINE_PORT_D,
+    });
+    const afterPeers = serverA.getPeers().map((peer) => peer.serverName);
+    expect(afterPeers).to.eql(['server-B', 'server-C']);
+  });
 });
 

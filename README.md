@@ -17,17 +17,14 @@ Peers bootstrap off of each other.
 ### Server A, 192.168.1.1
 
 ```js
-
 const Deepstream = require('deepstream.io-cluster');
 
 const server = new Deepstream();
-
 ```
 
 ### Server B, 192.168.1.2
 
 ```js
-
 const Deepstream = require('deepstream.io-cluster');
 
 const server = new Deepstream({
@@ -39,31 +36,21 @@ const server = new Deepstream({
     ]
   },
 });
-
 ```
 
 ### Server C, 192.168.1.3
 
 ```js
-
 const Deepstream = require('deepstream.io-cluster');
 
-const server = new Deepstream({
-  cluster: {
-    peerAddresses: [
-      {
-        host: '192.168.1.1'
-      }
-    ]
-  },
-});
+const server = new Deepstream();
 
+server.addPeer({host: '192.168.1.1'});
 ```
 
-## Options:
+## Options
 
 ```js
-
 const Deepstream = require('deepstream.io-cluster');
 
 const server = new Deepstream({
@@ -82,5 +69,47 @@ const server = new Deepstream({
     ]
   },
 });
-
 ```
+
+## Methods
+
+```js
+server.addPeer({
+  host: '127.0.0.1', // Optional, default '127.0.0.1'
+  pubsubPort: 6021, // Optional, default 6021
+  pipelinePort: 6022, // Optional, default 6022
+});
+```
+
+```js
+// Returns a Promise.
+
+server.removePeer({
+  host: '127.0.0.1', // Optional, default '127.0.0.1'
+  pubsubPort: 6021, // Optional, default 6021
+  pipelinePort: 6022, // Optional, default 6022
+});
+```
+
+```js
+server.getPeers();
+
+// Returns:
+//
+// [
+//   {
+//     serverName: "server-2",
+//     host: '192.168.1.2',
+//     pubsubPort: 6021,
+//     pipelinePort: 6022,
+//   },
+//   {
+//     serverName: "server-3",
+//     host: '192.168.1.3',
+//     pubsubPort: 6021,
+//     pipelinePort: 6022,
+//   },
+// ]
+```
+
+
