@@ -14,8 +14,8 @@ const StateRegistry = require('./state-registry');
 
                               
                
-                     
                       
+                       
   
 
                    
@@ -44,7 +44,7 @@ const StateRegistry = require('./state-registry');
                     
   
 
-const getSocketHash = (serverName       , socketSettings                )        => `${serverName}/${socketSettings.host}/${socketSettings.pubsubPort}/${socketSettings.pipelinePort}`;
+const getSocketHash = (serverName       , socketSettings                )        => `${serverName}/${socketSettings.host}/${socketSettings.pubsubPort || 6021}/${socketSettings.pipelinePort || 6022}`;
 
 const getSocketSettings = (hash       )                => {
   const [host, pubsubPort, pipelinePort] = hash.split('/').slice(1);
@@ -152,12 +152,27 @@ class ClusterNode extends events.EventEmitter {
       const stateRegistry = this.getStateRegistry(topic);
       stateRegistry.remove(name, serverName);
     });
+    // Messaging state sync
+    this.subscribe('_clusterRequestState', (message) => {
+      const { serverName } = message;
+      this.sendState(serverName);
+    });
+    this.subscribe('_clusterState', (message) => {
+      const { topic, name, serverNames } = message;
+      const stateRegistry = this.getStateRegistry(topic);
+      serverNames.forEach((serverName) => stateRegistry.add(name, serverName));
+    });
     // Connect to peers included in the options
     clusterOptions.peerAddresses.forEach(this.addPeer.bind(this));
     setImmediate(() => {
       this.isReady = true;
       this.emit('ready');
     });
+    setTimeout(() => {
+      this.send('_clusterRequestState', {
+        serverName: this.serverName,
+      });
+    }, 100);
   }
 
   receiveMessage(buffer       )      {
@@ -173,7 +188,7 @@ class ClusterNode extends events.EventEmitter {
   sendDirect(serverName       , topic       , message    )      {
     const push = this.namedPushSockets[serverName];
     if (!push) {
-      this.emit('error', `Unable to send message to "${serverName}"`);
+      this.emit('error', `${this.serverName} is unable to send message "${topic}":"${JSON.stringify(message)}" to "${serverName}"`);
       return;
     }
     push.send(JSON.stringify([topic, message, this.serverName]));
@@ -181,6 +196,19 @@ class ClusterNode extends events.EventEmitter {
 
   send(topic       , message    )      {
     this.pubSocket.send(JSON.stringify([topic, message, this.serverName]));
+  }
+
+  sendState(serverName       )      {
+    Object.keys(this.stateRegistries).forEach((topic) => {
+      Object.keys(this.stateRegistries[topic].data).forEach((name) => {
+        const message = {
+          topic,
+          name,
+          serverNames: Array.from(this.stateRegistries[topic].data[name]),
+        };
+        this.sendDirect(serverName, '_clusterState', message);
+      });
+    });
   }
 
   subscribe(topic       , callback         )      {
@@ -210,6 +238,10 @@ class ClusterNode extends events.EventEmitter {
     if (this.clusterUpdateTimeout) {
       clearTimeout(this.clusterUpdateTimeout);
     }
+    this.send('_clusterRemovePeer', {
+      socketHash: this.socketHash,
+    });
+    await new Promise((resolve) => setTimeout(resolve, 100));
     this.pullSocket.removeListener('data', this.boundReceiveMessage);
     await new Promise((resolve) => {
       this.pullSocket.on('close', resolve);
@@ -282,14 +314,15 @@ class ClusterNode extends events.EventEmitter {
     if (!peerExists) {
       return;
     }
-    Object.keys(this.namedPushSockets).forEach((name) => {
-      if (this.namedPushSockets[name] === this.pushSockets[pushConnectAddress]) {
-        delete this.namedPushSockets[name];
-        const socketHash = getSocketHash(name, peerAddress);
+    Object.keys(this.namedPushSockets).forEach((serverName) => {
+      if (this.namedPushSockets[serverName] === this.pushSockets[pushConnectAddress]) {
+        delete this.namedPushSockets[serverName];
+        const socketHash = getSocketHash(serverName, peerAddress);
         delete this.peerSocketHashes[socketHash];
         this.send('_clusterRemovePeer', {
           socketHash,
         });
+        Object.keys(this.stateRegistries).forEach((topic) => this.stateRegistries[topic].removeAll(serverName));
       }
     });
     await Promise.all([
@@ -317,6 +350,12 @@ class ClusterNode extends events.EventEmitter {
       push.on('error', reject);
       push.close();
     });
+  }
+
+  getPeers()                                               {
+    return Object.keys(this.peerSocketHashes).map((socketHash) => Object.assign({}, {
+      serverName: socketHash.split('/').shift(),
+    }, getSocketSettings(socketHash)));
   }
 }
 
