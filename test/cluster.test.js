@@ -256,6 +256,7 @@ describe('Cluster', function () {
       NANOMSG_PIPELINE_PORT_D,
       [seedServerAddress],
     );
+    await new Promise((resolve) => setTimeout(resolve, 1000));
     const clientD = await getClient(`${HOST}:${DEEPSTREAM_PORT_D}`, 'client-D');
     await new Promise((resolve) => {
       const recordD = clientD.record.getRecord(name);
@@ -270,6 +271,33 @@ describe('Cluster', function () {
     await clientD.shutdown();
     await serverD.shutdown();
     clientA.record.unlisten('listen/*');
+  });
+
+  it('Should sync events with a new server.', async () => {
+    const name = `event-${uuid.v4()}`;
+    const value = `event-value-${uuid.v4()}`;
+    const eventAPromise = new Promise((resolve) => {
+      clientA.event.subscribe(name, (data) => {
+        if (data.value === value) {
+          clientA.event.unsubscribe(name);
+          resolve();
+        }
+      });
+    });
+    const serverD = await getServer(
+      'server-D',
+      HOST,
+      DEEPSTREAM_PORT_D,
+      NANOMSG_PUBSUB_PORT_D,
+      NANOMSG_PIPELINE_PORT_D,
+      [seedServerAddress],
+    );
+    await new Promise((resolve) => setTimeout(resolve, 1000));
+    const clientD = await getClient(`${HOST}:${DEEPSTREAM_PORT_D}`, 'client-D');
+    clientD.event.emit(name, { value });
+    await eventAPromise;
+    await clientD.shutdown();
+    await serverD.shutdown();
   });
 });
 
