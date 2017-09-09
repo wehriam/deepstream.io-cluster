@@ -3,7 +3,6 @@
 
 const Deepstream = require('deepstream.io');
 const C = require('deepstream.io/src/constants/constants');
-const pkg = require('deepstream.io/package.json');
 const DependencyInitialiser = require('deepstream.io/src/utils/dependency-initialiser');
 const ClusterNode = require('./cluster-node');
 
@@ -12,8 +11,6 @@ class NanomsgDeepstreamCluster extends Deepstream {
     this._options.message = new ClusterNode(this._options);
 
     const infoLogger = (message) => this._options.logger.log(C.LOG_LEVEL.INFO, C.EVENT.INFO, message);
-
-    infoLogger(`deepstream version: ${pkg.version}`);
 
     if (this._configFile != null) {
       infoLogger(`configuration file loaded from ${this._configFile}`);
