@@ -2,6 +2,7 @@
 
 .*bower.*
 .*/node_modules/deepstream.io/test/.*
+.*/node_modules/.*
 
 [include]
 
