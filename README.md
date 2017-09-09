@@ -1,10 +1,11 @@
 ## Deepstream.io Cluster
-----------------------------------------------
-Community supported clustering for [deepstream.io](https://github.com/deepstreamIO/deepstream.io). Based on [Nanomsg](http://nanomsg.org/).
+Community supported clustering for [deepstream.io](https://github.com/deepstreamIO/deepstream.io). Based on [Nanomsg](http://nanomsg.org/). 
+
+Please see https://deepstreamhub.com/enterprise/ for commercially supported enterprise clustering from deepstreamHub GmbH.
 
 [![CircleCI](https://circleci.com/gh/wehriam/deepstream.io-cluster.svg?style=svg)](https://circleci.com/gh/wehriam/deepstream.io-cluster) [![npm version](https://badge.fury.io/js/deepstream.io-cluster.svg)](http://badge.fury.io/js/deepstream.io-cluster)
 
-## Usage:
+## Usage
 
 ```sh
 yarn install deepstream.io-cluster
