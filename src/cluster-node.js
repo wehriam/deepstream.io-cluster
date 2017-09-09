@@ -14,8 +14,8 @@ const StateRegistry = require('./state-registry');
 
 export type SocketSettings = {
   host: string,
-  pubsubPort: number,
-  pipelinePort: number
+  pubsubPort?: number,
+  pipelinePort?: number
 };
 
 type BindSocket = {
@@ -44,7 +44,7 @@ type Options = {
   serverName: string
 };
 
-const getSocketHash = (serverName:string, socketSettings: SocketSettings):string => `${serverName}/${socketSettings.host}/${socketSettings.pubsubPort}/${socketSettings.pipelinePort}`;
+const getSocketHash = (serverName:string, socketSettings: SocketSettings):string => `${serverName}/${socketSettings.host}/${socketSettings.pubsubPort || 6021}/${socketSettings.pipelinePort || 6022}`;
 
 const getSocketSettings = (hash:string):SocketSettings => {
   const [host, pubsubPort, pipelinePort] = hash.split('/').slice(1);

@@ -75,7 +75,7 @@ const server = new Deepstream({
 
 ```js
 server.addPeer({
-  host: '127.0.0.1', // Optional, default '127.0.0.1'
+  host: '192.168.1.2', // Required
   pubsubPort: 6021, // Optional, default 6021
   pipelinePort: 6022, // Optional, default 6022
 });
@@ -85,7 +85,7 @@ server.addPeer({
 // Returns a Promise.
 
 server.removePeer({
-  host: '127.0.0.1', // Optional, default '127.0.0.1'
+  host: '192.168.1.2', // Required
   pubsubPort: 6021, // Optional, default 6021
   pipelinePort: 6022, // Optional, default 6022
 });
