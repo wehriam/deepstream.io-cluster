@@ -39,7 +39,7 @@ const addressC = {
   pipelinePort: NANOMSG_PIPELINE_PORT_C,
 };
 
-const messageTimeout = () => new Promise((resolve) => setTimeout(resolve, 20));
+const messageTimeout = () => new Promise((resolve) => setTimeout(resolve, 250));
 
 
 const getNode = async (serverName:string, bindAddress:SocketSettings, peerAddresses:Array<SocketSettings>):Promise<ClusterNode> => {
