@@ -101,7 +101,7 @@ describe('Cluster', function () {
         }
       });
     });
-    const recordC = clientB.record.getRecord(name);
+    const recordC = clientC.record.getRecord(name);
     recordC.set({ value });
     await subscribeAPromise;
     await subscribeBPromise;
