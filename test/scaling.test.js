@@ -117,7 +117,6 @@ describe('Cluster', function () {
       if (!isSubscribed) {
         return;
       }
-      console.log('GOT LISTEN', match);
       const recordA = clientA.record.getRecord(match);
       response.accept();
       recordA.set({ value }, () => {
