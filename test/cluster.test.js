@@ -101,6 +101,7 @@ describe('Cluster', function () {
         }
       });
     });
+    await new Promise((resolve) => setTimeout(resolve, 500));
     const recordC = clientC.record.getRecord(name);
     recordC.set({ value });
     await subscribeAPromise;
