@@ -101,7 +101,7 @@ const options = {}; // See options at https://github.com/wankdanker/node-discove
 server.startPeerDiscovery(options);
 
 // later
-node.stopPeerDiscovery();
+server.stopPeerDiscovery();
 ```
 
 ```js
