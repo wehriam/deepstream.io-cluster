@@ -12,6 +12,7 @@ const events = require('events');
 const StateRegistry = require('./state-registry');
 
                               
+                
                
                       
                        
@@ -34,16 +35,34 @@ class ClusterNode extends events.EventEmitter {
                   
                                             
                                
+                              
 
   constructor(options        ) {
     super();
     this.options = options;
     this.serverName = options.serverName;
+    this.stateRegistries = {};
+    this.isReady = false;
+    this.closed = false;
 
     const clusterOptions = Object.assign({}, { name: options.serverName }, options.cluster);
 
     this.clusterNode = new NanomsgClusterNode(clusterOptions);
     this.clusterNode.on('error', (error) => this.emit('error', error));
+
+    // Messaging about topics to add to the state registry
+    this.subscribe('_clusterTopicAdd', (message) => {
+      const [serverName, topic, name] = message;
+      const stateRegistry = this.getStateRegistry(topic);
+      stateRegistry.add(name, serverName);
+    });
+
+    // Messaging about topics to remove from the state registry
+    this.subscribe('_clusterTopicRemove', (message) => {
+      const [serverName, topic, name] = message;
+      const stateRegistry = this.getStateRegistry(topic);
+      stateRegistry.remove(name, serverName);
+    });
 
     // Messaging state sync
     this.clusterNode.subscribe('_clusterRequestState', (message) => {
@@ -56,6 +75,24 @@ class ClusterNode extends events.EventEmitter {
       const stateRegistry = this.getStateRegistry(topic);
       serverNames.forEach((serverName) => stateRegistry.add(name, serverName));
     });
+
+    this.clusterNode.on('removePeer', (peerAddress               ) => {
+      const serverName = peerAddress.name;
+      if (serverName) {
+        Object.keys(this.stateRegistries).forEach((topic) => this.stateRegistries[topic].removeAll(serverName));
+      }
+    }, true);
+
+    this.clusterNode.on('addPeer', () => {
+      if (this.requestStateTimeout) {
+        clearTimeout(this.requestStateTimeout);
+      }
+      this.requestStateTimeout = setTimeout(() => {
+        this.clusterNode.sendToAll('_clusterRequestState', {
+          serverName: this.serverName,
+        });
+      }, 100);
+    }, true);
 
     setImmediate(() => {
       this.isReady = true;
@@ -110,6 +147,9 @@ class ClusterNode extends events.EventEmitter {
   }
 
   async close(callback          )               {
+    if (this.closed) {
+      throw new Error('ClusterNode already closed.');
+    }
     await this.clusterNode.close();
     this.closed = true;
     this.emit('close');
@@ -127,7 +167,7 @@ class ClusterNode extends events.EventEmitter {
   }
 
   getPeers()                              {
-    return this.clusterNode.getPeers();
+    return this.clusterNode.getPeers().map((peer) => ({ serverName: peer.name }));
   }
 }
 
