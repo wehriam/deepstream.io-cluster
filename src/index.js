@@ -18,6 +18,12 @@ class NanomsgDeepstreamCluster extends Deepstream {
   getPeers():Array<SocketSettings & {serverName: string}> {
     return this._options.message.getPeers();
   }
+  startPeerDiscovery(options: Object):Promise<void> {
+    return this._options.message.clusterNode.startDiscovery(options);
+  }
+  stopPeerDiscovery():void {
+    return this._options.message.clusterNode.stopDiscovery();
+  }
   _pluginInit():void {
     this._options.message = new ClusterNode(this._options);
 

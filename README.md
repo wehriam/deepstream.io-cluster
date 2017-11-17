@@ -92,6 +92,18 @@ server.removePeer({
 });
 ```
 
+Automatic peer discovery with [node-discover](https://github.com/wankdanker/node-discover)
+
+```js
+const options = {}; // See options at https://github.com/wankdanker/node-discover#constructor
+
+// Returns a Promise.
+server.startPeerDiscovery(options);
+
+// later
+node.stopPeerDiscovery();
+```
+
 ```js
 server.getPeers();
 

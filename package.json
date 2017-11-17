@@ -1,6 +1,6 @@
 {
   "name": "deepstream.io-cluster",
-  "version": "0.4.0",
+  "version": "0.5.0",
   "description": "Community supported clustering for Deepstream.io",
   "main": "dist/index.js",
   "scripts": {
@@ -11,7 +11,7 @@
     "lint:flow": "flow --show-all-errors",
     "flow-typed": "flow-typed install --overwrite",
     "test": "yarn lint && yarn test:js",
-    "test:js": "cross-env NODE_ENV=test nyc mocha test/*.test.js"
+    "test:js": "cross-env NODE_ENV=test nyc mocha test/discovery.test.js"
   },
   "nyc": {
     "require": [
@@ -41,8 +41,7 @@
   },
   "pre-commit": "lint:staged",
   "dependencies": {
-    "lodash.merge": "^4.6.0",
-    "nanomsg": "^3.3.0"
+    "nanomsg-cluster": "^0.4.0"
   },
   "peerDependencies": {
     "deepstream.io": "3.1.1"
@@ -51,8 +50,8 @@
     "babel-eslint": "^8.0.1",
     "chai": "^4.1.2",
     "cross-env": "^5.1.0",
-    "deepstream.io-client-js": "^2.3.0",
     "deepstream.io": "3.1.1",
+    "deepstream.io-client-js": "^2.3.0",
     "eslint": "^4.9.0",
     "eslint-config-bunchtogether": "^1.1.2",
     "eslint-import-resolver-webpack": "^0.8.3",
@@ -64,6 +63,7 @@
     "flow-bin": "^0.57.3",
     "flow-remove-types": "^1.2.3",
     "flow-typed": "^2.2.1",
+    "ip": "^1.1.5",
     "lint-staged": "^4.3.0",
     "mocha": "^4.0.1",
     "nyc": "^11.2.1",
