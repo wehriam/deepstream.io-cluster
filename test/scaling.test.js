@@ -10,7 +10,7 @@ const DEEPSTREAM_SEED_PORT = 6000;
 const PUBSUB_SEED_PORT = 6001;
 const PIPELINE_SEED_PORT = 6002;
 
-describe('Cluster', function () {
+describe('Scaling', function () {
   this.timeout(10000);
   const servers = [];
   const clients = [];
@@ -41,7 +41,7 @@ describe('Cluster', function () {
     const seedClient = await getClient(`${HOST}:${DEEPSTREAM_SEED_PORT}`, 'client-0');
     servers.push(seedServer);
     clients.push(seedClient);
-    for (let i = 1; i < 16; i += 1) {
+    for (let i = 1; i < 4; i += 1) {
       const server = await getServer(
         `server-${i}`,
         HOST,

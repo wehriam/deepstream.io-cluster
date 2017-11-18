@@ -1,11 +1,16 @@
 // @flow
 
 const uuid = require('uuid');
-const DeepstreamClient = require('deepstream.io-client-js');
+const DeepstreamClient = require('deepstream.io-client-js/src/client');
 const { CONSTANTS } = require('deepstream.io-client-js');
 
 module.exports.getClient = async function (address:string, username?:string = uuid.v4()):Promise<DeepstreamClient> {
   const client = DeepstreamClient(address);
+  client.on('error', (errorMessage, errorType) => {
+    if (errorType !== CONSTANTS.EVENT.UNSOLICITED_MESSAGE && errorType !== CONSTANTS.EVENT.NOT_SUBSCRIBED) {
+      throw new Error(errorType);
+    }
+  });
   await new Promise((resolve, reject) => {
     client.on('connectionStateChanged', (connectionState) => {
       if (connectionState === CONSTANTS.CONNECTION_STATE.OPEN) {
@@ -16,6 +21,7 @@ module.exports.getClient = async function (address:string, username?:string = uu
       }
     });
     client.login({ username });
+    client.username = username;
   });
   client.shutdown = async function () {
     await new Promise((resolve) => {

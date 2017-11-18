@@ -184,6 +184,35 @@ describe('Cluster', function () {
     expect(usernamesC).to.include.members(['client-A', 'client-B']);
   });
 
+  it('Should receive presence events.', async () => {
+    const loginA2Promise = new Promise((resolve) => {
+      clientB.presence.subscribe((deviceId:string, login:boolean) => {
+        if (deviceId === 'client-A2' && login) {
+          resolve();
+        }
+      });
+    });
+    const logoutA2Promise = new Promise((resolve) => {
+      clientC.presence.subscribe((deviceId:string, login:boolean) => {
+        if (deviceId === 'client-A2' && !login) {
+          resolve();
+        }
+      });
+    });
+    await new Promise((resolve) => setTimeout(resolve, 1000));
+    const clientA2 = await getClient(`${HOST}:${DEEPSTREAM_PORT_A}`, 'client-A2');
+    await loginA2Promise;
+    await new Promise((resolve) => setTimeout(resolve, 1000));
+    await clientA2.shutdown();
+    await logoutA2Promise;
+  });
+
+  it.skip('Should unsubscribe from presence events.', async () => {
+    // This doesn't work because the unsubscribe event messaging seems to be off.
+    clientB.presence.unsubscribe();
+    clientC.presence.unsubscribe();
+  });
+
   it('Should sync presence with a new server.', async () => {
     const serverD = await getServer(
       'server-D',

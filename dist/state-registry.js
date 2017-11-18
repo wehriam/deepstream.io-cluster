@@ -26,23 +26,34 @@ module.exports = class DistributedStateRegistry extends EventEmitter {
     return !!this.data[name];
   }
 
-  add(name       , serverName         = this.options.serverName)      {
+  add(name       , serverName        )      {
     if (!this.data[name]) {
-      this.data[name] = new Set([serverName]);
+      if (!serverName) {
+        this.emit('clusterAdd', name);
+      }
+      this.data[name] = new Set([]);
       this.emit('add', name);
-    } else {
+    }
+    if (serverName) {
       this.data[name].add(serverName);
     }
   }
 
-  remove(name       , serverName         = this.options.serverName)      {
+  remove(name       , serverName        )      {
     if (!this.data[name]) {
       return;
     }
-    this.data[name].delete(serverName);
-    if (this.data[name].size === 0) {
-      delete this.data[name];
-      this.emit('remove', name);
+    if (serverName) {
+      this.data[name].delete(serverName);
+      if (this.data[name].size === 0) {
+        this.emit('remove', name);
+      }
+    } else {
+      if (this.data[name].size === 0) {
+        delete this.data[name];
+        this.emit('remove', name);
+      }
+      this.emit('clusterRemove', name);
     }
   }
 

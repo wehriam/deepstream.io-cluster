@@ -117,10 +117,12 @@ class ClusterNode extends events.EventEmitter {
   sendState(serverName       )      {
     Object.keys(this.stateRegistries).forEach((topic) => {
       Object.keys(this.stateRegistries[topic].data).forEach((name) => {
+        const serverNames = Array.from(this.stateRegistries[topic].data[name]);
+        serverNames.push(this.serverName);
         const message = {
           topic,
           name,
-          serverNames: Array.from(this.stateRegistries[topic].data[name]),
+          serverNames,
         };
         this.clusterNode.sendToPeer(serverName, '_clusterState', message);
       });
@@ -136,10 +138,10 @@ class ClusterNode extends events.EventEmitter {
       return this.stateRegistries[topic];
     }
     const stateRegistry = new StateRegistry(topic, this.options);
-    stateRegistry.on('add', (name) => {
+    stateRegistry.on('clusterAdd', (name) => {
       this.clusterNode.sendToAll('_clusterTopicAdd', [this.serverName, topic, name]);
     });
-    stateRegistry.on('remove', (name) => {
+    stateRegistry.on('clusterRemove', (name) => {
       this.clusterNode.sendToAll('_clusterTopicRemove', [this.serverName, topic, name]);
     });
     this.stateRegistries[topic] = stateRegistry;
