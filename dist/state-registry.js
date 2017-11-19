@@ -22,6 +22,10 @@ module.exports = class DistributedStateRegistry extends EventEmitter {
     this.data = {};
   }
 
+  whenReady(callback         ) {
+    callback();
+  }
+
   has(name       )         {
     return !!this.data[name];
   }

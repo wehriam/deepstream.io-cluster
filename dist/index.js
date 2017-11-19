@@ -1,98 +1,179 @@
 //      
-/* eslint-disable no-underscore-dangle */
 
-                                                     
+/*
+*
+* Based on https://github.com/deepstreamIO/deepstream.io/blob/dab0fd740b8efe2c4ddaa9d1dc6531c2e97ec338/src/cluster/cluster-node.js
+*
+*/
 
-const Deepstream = require('deepstream.io');
-const C = require('deepstream.io/src/constants/constants');
-const MessageProcessor = require('deepstream.io/src/message/message-processor');
-const MessageDistributor = require('deepstream.io/src/message/message-distributor');
-const EventHandler = require('deepstream.io/src/event/event-handler');
-const RpcHandler = require('deepstream.io/src/rpc/rpc-handler');
-const RecordHandler = require('deepstream.io/src/record/record-handler');
-const LockRegistry = require('deepstream.io/src/cluster/lock-registry');
-const DependencyInitialiser = require('deepstream.io/src/utils/dependency-initialiser');
-const PresenceHandler = require('./presence-handler');
-const ClusterNode = require('./cluster-node');
+const NanomsgClusterNode = require('nanomsg-cluster');
+const events = require('events');
 
-class NanomsgDeepstreamCluster extends Deepstream {
-  addPeer(peerAddress                )      {
-    this._options.message.addPeer(peerAddress);
-  }
-  removePeer(peerAddress                )               {
-    return this._options.message.removePeer(peerAddress);
-  }
-  getPeers()                                              {
-    return this._options.message.getPeers();
-  }
-  startPeerDiscovery(options        )               {
-    return this._options.message.clusterNode.startDiscovery(options);
-  }
-  stopPeerDiscovery()      {
-    return this._options.message.clusterNode.stopDiscovery();
-  }
-  _serviceInit() {
-    this._messageProcessor = new MessageProcessor(this._options);
-    this._messageDistributor = new MessageDistributor(this._options);
+const StateRegistry = require('./state-registry');
 
-    this._options.uniqueRegistry = new LockRegistry(this._options, this._options.message);
+                              
+                
+               
+                      
+                       
+  
 
-    this._eventHandler = new EventHandler(this._options);
-    this._messageDistributor.registerForTopic(
-      C.TOPIC.EVENT,
-      this._eventHandler.handle.bind(this._eventHandler),
-    );
+                
+             
+                                 
+                                          
+    
+                    
+  
 
-    this._rpcHandler = new RpcHandler(this._options);
-    this._messageDistributor.registerForTopic(
-      C.TOPIC.RPC,
-      this._rpcHandler.handle.bind(this._rpcHandler),
-    );
+class ClusterNode extends events.EventEmitter {
+                   
+                   
+                     
+                                  
+                                     
+                  
+                                            
+                               
+                              
+               
 
-    this._recordHandler = new RecordHandler(this._options);
-    this._messageDistributor.registerForTopic(
-      C.TOPIC.RECORD,
-      this._recordHandler.handle.bind(this._recordHandler),
-    );
+  constructor(options        ) {
+    super();
+    this.options = options;
+    this.serverName = options.serverName;
+    this.stateRegistries = {};
+    this.isReady = false;
+    this.closed = false;
 
-    this._presenceHandler = new PresenceHandler(this._options);
-    this._messageDistributor.registerForTopic(
-      C.TOPIC.PRESENCE,
-      this._presenceHandler.handle.bind(this._presenceHandler),
-    );
+    this.name = 'deepstream.io-cluster';
 
-    this._messageProcessor.onAuthenticatedMessage =
-      this._messageDistributor.distribute.bind(this._messageDistributor);
+    const clusterOptions = Object.assign({}, { name: options.serverName }, options.cluster);
 
-    if (this._options.permissionHandler.setRecordHandler) {
-      this._options.permissionHandler.setRecordHandler(this._recordHandler);
-    }
+    this.clusterNode = new NanomsgClusterNode(clusterOptions);
+    this.clusterNode.on('error', (error) => this.emit('error', error));
 
-    process.nextTick(() => this._transition('services-started'));
-  }
-  _pluginInit() {
-    this._options.message = new ClusterNode(this._options);
-
-    const infoLogger = (message) => this._options.logger.info(C.EVENT.INFO, message);
-
-    // otherwise (no configFile) deepstream was invoked by API
-    if (this._configFile != null) {
-      infoLogger(`configuration file loaded from ${this._configFile}`);
-    }
-
-    if (global.deepstreamLibDir) {
-      infoLogger(`library directory set to: ${global.deepstreamLibDir}`);
-    }
-
-    this._options.pluginTypes.forEach((pluginType) => {
-      const plugin = this._options[pluginType];
-      const initialiser = new DependencyInitialiser(this, this._options, plugin, pluginType);
-      initialiser.once('ready', () => {
-        this._checkReady(pluginType, plugin);
-      });
-      return initialiser;
+    // Messaging about topics to add to the state registry
+    this.subscribe('_clusterTopicAdd', (message) => {
+      const [serverName, topic, name] = message;
+      const stateRegistry = this.getStateRegistry(topic);
+      stateRegistry.add(name, serverName);
     });
+
+    // Messaging about topics to remove from the state registry
+    this.subscribe('_clusterTopicRemove', (message) => {
+      const [serverName, topic, name] = message;
+      const stateRegistry = this.getStateRegistry(topic);
+      stateRegistry.remove(name, serverName);
+    });
+
+    // Messaging state sync
+    this.clusterNode.subscribe('_clusterRequestState', (message) => {
+      const { serverName } = message;
+      this.sendState(serverName);
+    });
+
+    this.clusterNode.subscribe('_clusterState', (message) => {
+      const { topic, name, serverNames } = message;
+      const stateRegistry = this.getStateRegistry(topic);
+      serverNames.forEach((serverName) => stateRegistry.add(name, serverName));
+    });
+
+    this.clusterNode.on('removePeer', (peerAddress               ) => {
+      const serverName = peerAddress.name;
+      if (serverName) {
+        Object.keys(this.stateRegistries).forEach((topic) => this.stateRegistries[topic].removeAll(serverName));
+      }
+    }, true);
+
+    this.clusterNode.on('addPeer', () => {
+      if (this.requestStateTimeout) {
+        clearTimeout(this.requestStateTimeout);
+      }
+      this.requestStateTimeout = setTimeout(() => {
+        this.clusterNode.sendToAll('_clusterRequestState', {
+          serverName: this.serverName,
+        });
+      }, 100);
+    }, true);
+
+    setImmediate(() => {
+      this.isReady = true;
+      this.emit('ready');
+    });
+
+    setTimeout(() => {
+      this.clusterNode.sendToAll('_clusterRequestState', {
+        serverName: this.serverName,
+      });
+    }, 100);
+  }
+
+  sendDirect(serverName       , topic       , message    )      {
+    this.clusterNode.sendToPeer(serverName, topic, message);
+  }
+
+  send(topic       , message    )      {
+    this.clusterNode.sendToAll(topic, message);
+  }
+
+  sendState(serverName       )      {
+    Object.keys(this.stateRegistries).forEach((topic) => {
+      Object.keys(this.stateRegistries[topic].data).forEach((name) => {
+        const serverNames = Array.from(this.stateRegistries[topic].data[name]);
+        serverNames.push(this.serverName);
+        const message = {
+          topic,
+          name,
+          serverNames,
+        };
+        this.clusterNode.sendToPeer(serverName, '_clusterState', message);
+      });
+    });
+  }
+
+  subscribe(topic       , callback         )      {
+    this.clusterNode.subscribe(topic, callback);
+  }
+
+  getStateRegistry(topic       )               {
+    if (this.stateRegistries[topic]) {
+      return this.stateRegistries[topic];
+    }
+    const stateRegistry = new StateRegistry(topic, this.options);
+    stateRegistry.on('clusterAdd', (name) => {
+      this.clusterNode.sendToAll('_clusterTopicAdd', [this.serverName, topic, name]);
+    });
+    stateRegistry.on('clusterRemove', (name) => {
+      this.clusterNode.sendToAll('_clusterTopicRemove', [this.serverName, topic, name]);
+    });
+    this.stateRegistries[topic] = stateRegistry;
+    return stateRegistry;
+  }
+
+  async close(callback          )               {
+    if (this.closed) {
+      throw new Error('ClusterNode already closed.');
+    }
+    await this.clusterNode.close();
+    this.closed = true;
+    this.emit('close');
+    if (callback) {
+      callback();
+    }
+  }
+
+  addPeer(peerAddress                )      {
+    this.clusterNode.addPeer(peerAddress);
+  }
+
+  removePeer(peerAddress               )               {
+    return this.clusterNode.removePeer(peerAddress);
+  }
+
+  getPeers()                              {
+    return this.clusterNode.getPeers().map((peer) => ({ serverName: peer.name }));
   }
 }
 
-module.exports = NanomsgDeepstreamCluster;
+module.exports = ClusterNode;

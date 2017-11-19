@@ -84,6 +84,7 @@ describe('Cluster', function () {
     const subscribeAPromise = new Promise((resolve) => {
       const recordA = clientA.record.getRecord(name);
       recordA.subscribe((data) => {
+         console.log("Record A:", data)
         if (data.value === value) {
           recordA.unsubscribe();
           recordA.discard();
@@ -94,6 +95,7 @@ describe('Cluster', function () {
     const subscribeBPromise = new Promise((resolve) => {
       const recordB = clientB.record.getRecord(name);
       recordB.subscribe((data) => {
+        console.log("Record B:", data)
         if (data.value === value) {
           recordB.unsubscribe();
           recordB.discard();

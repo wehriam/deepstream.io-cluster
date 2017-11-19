@@ -3,12 +3,12 @@
 // Based on deepstream.io-msg-connector-template 
 // https://github.com/deepstreamIO/deepstream.io-msg-connector-template
 
-import type { SocketSettings } from '../src/cluster-node';
+import type { SocketSettings } from '../src';
 
 const chai = require('chai');
 const sinon = require('sinon');
 const sinonChai = require('sinon-chai');
-const ClusterNode = require('../src/cluster-node');
+const ClusterNode = require('../src');
 
 chai.use(sinonChai);
 const { expect } = chai;

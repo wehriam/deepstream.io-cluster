@@ -1,12 +1,13 @@
 // @flow
 
-import type { SocketSettings } from '../../src/cluster-node';
+import type { SocketSettings } from '../../src';
 
-const CONSTANTS = require('deepstream.io/src/constants/constants');
-const Deepstream = require('../../src');
+const path = require('path');
+const Deepstream = require('deepstream.io').default;
 
 module.exports.getServer = async function (serverName: string, host: string, deepstreamPort:number, pubsubPort:number, pipelinePort: number, peerAddresses?:Array<SocketSettings> = []):Promise<Deepstream> {
   const server = new Deepstream({
+    serverName,
     connectionEndpoints: {
       websocket: {
         options: {
@@ -15,17 +16,24 @@ module.exports.getServer = async function (serverName: string, host: string, dee
       },
       http: false,
     },
-    cluster: {
-      bindAddress: {
-        host,
-        pubsubPort,
-        pipelinePort,
+    plugins: {
+      cluster: {
+        name: path.resolve(__dirname, '../../src'),
+        options: {
+          serverName,
+          cluster: {
+            bindAddress: {
+              host,
+              pubsubPort,
+              pipelinePort,
+            },
+            peerAddresses,
+          },
+        },
       },
-      peerAddresses,
     },
   });
-  server.set('logLevel', CONSTANTS.LOG_LEVEL.ERROR);
-  server.set('serverName', serverName);
+
   server.set('showLogo', false);
   await new Promise((resolve, reject) => {
     server.once('started', resolve);
