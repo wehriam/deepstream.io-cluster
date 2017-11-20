@@ -169,7 +169,12 @@ class ClusterNode extends events.EventEmitter {
   }
 
   getPeers()                              {
-    return this.clusterNode.getPeers().map((peer) => ({ serverName: peer.name }));
+    return this.clusterNode.getPeers().map((peer) => ({
+      serverName: peer.name,
+      host: peer.host,
+      pubsubPort: peer.pubsubPort,
+      pipelinePort: peer.pipelinePort,
+    }));
   }
 }
 

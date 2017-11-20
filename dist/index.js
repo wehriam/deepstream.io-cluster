@@ -25,6 +25,26 @@ class NanomsgDeepstreamCluster extends Deepstream {
   getPeers()                                              {
     return this._options.message.getPeers();
   }
+  onAddPeer(callback          )       {
+    this._options.message.clusterNode.on('addPeer', (peer               ) => {
+      callback({
+        serverName: peer.name,
+        host: peer.host,
+        pubsubPort: peer.pubsubPort,
+        pipelinePort: peer.pipelinePort,
+      });
+    }, true);
+  }
+  onRemovePeer(callback          )       {
+    this._options.message.clusterNode.on('removePeer', (peer               ) => {
+      callback({
+        serverName: peer.name,
+        host: peer.host,
+        pubsubPort: peer.pubsubPort,
+        pipelinePort: peer.pipelinePort,
+      });
+    }, true);
+  }
   startPeerDiscovery(options        )               {
     return this._options.message.clusterNode.startDiscovery(options);
   }

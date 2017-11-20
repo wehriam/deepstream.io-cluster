@@ -331,8 +331,8 @@ describe('Cluster', function () {
   });
 
   it('Should add and remove peers.', async () => {
-    const beforePeers = serverA.getPeers().map((peer) => peer.serverName);
-    expect(beforePeers).to.eql(['server-B', 'server-C']);
+    const beforePeersServerNames = serverA.getPeers().map((peer) => peer.serverName);
+    expect(beforePeersServerNames).to.eql(['server-B', 'server-C']);
     const serverD = await getServer(
       'server-D',
       HOST,
@@ -340,12 +340,42 @@ describe('Cluster', function () {
       NANOMSG_PUBSUB_PORT_D,
       NANOMSG_PIPELINE_PORT_D,
     );
+    const addPeerAPromise = new Promise((resolve) => {
+      serverA.onAddPeer((peerAddress) => {
+        if (peerAddress.serverName === 'server-D') {
+          resolve();
+        }
+      });
+    });
+    const addPeerBPromise = new Promise((resolve) => {
+      serverB.onAddPeer((peerAddress) => {
+        if (peerAddress.serverName === 'server-D') {
+          resolve();
+        }
+      });
+    });
+    const removePeerAPromise = new Promise((resolve) => {
+      serverA.onRemovePeer((peerAddress) => {
+        if (peerAddress.serverName === 'server-D') {
+          resolve();
+        }
+      });
+    });
+    const removePeerBPromise = new Promise((resolve) => {
+      serverB.onRemovePeer((peerAddress) => {
+        if (peerAddress.serverName === 'server-D') {
+          resolve();
+        }
+      });
+    });
     serverA.addPeer({
       host: HOST,
       pubsubPort: NANOMSG_PUBSUB_PORT_D,
       pipelinePort: NANOMSG_PIPELINE_PORT_D,
     });
     await new Promise((resolve) => setTimeout(resolve, 1000));
+    await addPeerAPromise;
+    await addPeerBPromise;
     const peers = serverA.getPeers().map((peer) => peer.serverName);
     expect(peers).to.eql(['server-B', 'server-C', 'server-D']);
     await serverD.shutdown();
@@ -354,8 +384,16 @@ describe('Cluster', function () {
       pubsubPort: NANOMSG_PUBSUB_PORT_D,
       pipelinePort: NANOMSG_PIPELINE_PORT_D,
     });
-    const afterPeers = serverA.getPeers().map((peer) => peer.serverName);
-    expect(afterPeers).to.eql(['server-B', 'server-C']);
+    await removePeerAPromise;
+    await removePeerBPromise;
+    const afterPeersServerNames = serverA.getPeers().map((peer) => peer.serverName);
+    expect(afterPeersServerNames).to.eql(['server-B', 'server-C']);
+    const afterPeersHosts = serverA.getPeers().map((peer) => peer.host);
+    expect(afterPeersHosts).to.eql([HOST, HOST]);
+    const afterPeersPubsubPorts = serverA.getPeers().map((peer) => peer.pubsubPort);
+    expect(afterPeersPubsubPorts).to.eql([NANOMSG_PUBSUB_PORT_B, NANOMSG_PUBSUB_PORT_C]);
+    const afterPeersPipelinePorts = serverA.getPeers().map((peer) => peer.pipelinePort);
+    expect(afterPeersPipelinePorts).to.eql([NANOMSG_PIPELINE_PORT_B, NANOMSG_PIPELINE_PORT_C]);
   });
 });
 
