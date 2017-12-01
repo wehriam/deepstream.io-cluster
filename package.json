@@ -11,7 +11,7 @@
     "lint:flow": "flow --show-all-errors",
     "flow-typed": "flow-typed install --overwrite",
     "test": "yarn lint && yarn test:js",
-    "test:js": "cross-env NODE_ENV=test nyc mocha test"
+    "test:js": "cross-env NODE_ENV=test nyc mocha test/cluster-messaging.test.js"
   },
   "nyc": {
     "require": [

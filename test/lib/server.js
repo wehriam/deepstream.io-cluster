@@ -2,7 +2,7 @@
 
 import type { SocketSettings } from '../../src/cluster-node';
 
-const CONSTANTS = require('deepstream.io/src/constants/constants');
+// const CONSTANTS = require('deepstream.io/src/constants/constants');
 const Deepstream = require('../../src');
 
 module.exports.getServer = async function (serverName: string, host: string, deepstreamPort:number, pubsubPort:number, pipelinePort: number, peerAddresses?:Array<SocketSettings> = []):Promise<Deepstream> {
@@ -24,7 +24,15 @@ module.exports.getServer = async function (serverName: string, host: string, dee
       peerAddresses,
     },
   });
-  server.set('logLevel', CONSTANTS.LOG_LEVEL.ERROR);
+
+  // Disable Logger to enable debug logging
+  server.set('logger', {
+    isReady: true,
+    debug: () => {},
+    error: () => {},
+    info: () => {},
+  });
+  server.set('logLevel', 'error');
   server.set('serverName', serverName);
   server.set('showLogo', false);
   await new Promise((resolve, reject) => {
