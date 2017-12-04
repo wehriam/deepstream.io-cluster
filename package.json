@@ -1,6 +1,6 @@
 {
   "name": "deepstream.io-cluster",
-  "version": "0.6.1",
+  "version": "0.6.2",
   "description": "Community supported clustering for Deepstream.io",
   "main": "dist/index.js",
   "scripts": {
@@ -11,7 +11,7 @@
     "lint:flow": "flow --show-all-errors",
     "flow-typed": "flow-typed install --overwrite",
     "test": "yarn lint && yarn test:js",
-    "test:js": "cross-env NODE_ENV=test nyc mocha test/cluster-messaging.test.js"
+    "test:js": "cross-env NODE_ENV=test nyc mocha test"
   },
   "nyc": {
     "require": [
