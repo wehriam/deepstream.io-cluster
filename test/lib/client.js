@@ -23,6 +23,19 @@ module.exports.getClient = async function (address:string, username?:string = uu
     client.login({ username });
     client.username = username;
   });
+  client.loginAgain = async function () {
+    await new Promise((resolve, reject) => {
+      client.on('connectionStateChanged', (connectionState) => {
+        if (connectionState === CONSTANTS.CONNECTION_STATE.OPEN) {
+          client.off('connectionStateChanged');
+          resolve();
+        } else if (connectionState === CONSTANTS.CONNECTION_STATE.ERROR) {
+          reject(new Error('Connection error.'));
+        }
+      });
+      client.login({ username: client.username });
+    });
+  };
   client.shutdown = async function () {
     await new Promise((resolve) => {
       const currentConnectionState = client.getConnectionState();

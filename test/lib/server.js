@@ -31,6 +31,7 @@ module.exports.getServer = async function (serverName: string, host: string, dee
     debug: () => {},
     error: () => {},
     info: () => {},
+    warn: () => {},
   });
   server.set('logLevel', 'error');
   server.set('serverName', serverName);

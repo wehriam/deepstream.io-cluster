@@ -165,6 +165,7 @@ module.exports = class PresenceHandler {
   */
   _onClientAdded(username) {
     const message = { topic: C.TOPIC.PRESENCE, action: C.ACTIONS.PRESENCE_JOIN, data: [username] };
+
     this._subscriptionRegistry.sendToSubscribers(
       EVERYONE, message, false, C.SOURCE_MESSAGE_CONNECTOR,
     );

@@ -1,6 +1,5 @@
 // @flow
 
-const uuid = require('uuid');
 const { expect } = require('chai');
 const { getServer } = require('./lib/server');
 const { getClient } = require('./lib/client');
@@ -53,15 +52,11 @@ describe('Cluster Messaging - Single Node', function () {
     const presenceState = {
       SERVER_A: {},
     };
-    const recordNameA = uuid.v4();
-    const recordNameB = uuid.v4();
-    const recordValueA = `REC_A--${uuid.v4()}`;
-    const recordValueB = `REC_B--${uuid.v4()}`;
 
-    // Presense
-    const presenseClientA = await getClient(`${HOST}:${DEEPSTREAM_PORT_A}`, 'presenseA');
-    presenseClientA.presence.subscribe((deviceId:string, login:boolean) => {
-      console.log('PRESENSE SERVER A:', deviceId, login);
+
+    // Presence
+    const presenceClientA = await getClient(`${HOST}:${DEEPSTREAM_PORT_A}`, 'presenceA');
+    presenceClientA.presence.subscribe((deviceId:string, login:boolean) => {
       if (!presenceState.SERVER_A[deviceId]) {
         presenceState.SERVER_A[deviceId] = [login];
       } else {
@@ -71,47 +66,27 @@ describe('Cluster Messaging - Single Node', function () {
 
     // Client A --> Server A
     let clientA = await getClient(`${HOST}:${DEEPSTREAM_PORT_A}`, 'client-A');
-    let recordA = clientA.record.getRecord(recordNameA);
-    recordA.set({ value: recordValueA }, async () => {
-      recordA.discard();
-      await clientA.shutdown();
-    });
+    await clientA.shutdown();
 
     // Client A --> Server B
     clientA = await getClient(`${HOST}:${DEEPSTREAM_PORT_A}`, 'client-A');
-    recordA = clientA.record.getRecord(recordNameA);
-    recordA.set({ value: recordValueB }, async () => {
-      recordA.discard();
-      await clientA.shutdown();
-    });
+    await clientA.shutdown();
 
     // Client B --> Server B
     let clientB = await getClient(`${HOST}:${DEEPSTREAM_PORT_A}`, 'client-B');
-    let recordB = clientB.record.getRecord(recordNameB);
-    recordB.set({ value: recordValueB }, async () => {
-      recordB.discard();
-      await clientB.shutdown();
-    });
+    await clientB.shutdown();
 
     // Client A --> Server A
     clientA = await getClient(`${HOST}:${DEEPSTREAM_PORT_A}`, 'client-A');
-    recordA = clientA.record.getRecord(recordNameA);
-    recordA.set({ value: 'END' }, async () => {
-      recordA.discard();
-      await clientA.shutdown();
-    });
+    await clientA.shutdown();
 
     // Client B --> Server B
     clientB = await getClient(`${HOST}:${DEEPSTREAM_PORT_A}`, 'client-B');
-    recordB = clientB.record.getRecord(recordNameB);
-    recordB.set({ value: 'END' }, async () => {
-      recordB.discard();
-      await clientB.shutdown();
-    });
+    await clientB.shutdown();
 
-    await new Promise((resolve) => setTimeout(resolve, 2000));
-    console.log('\n\nPRESENSE RECORD ON SINGLE NODE\n', presenceState);
-    await presenseClientA.shutdown();
+    await new Promise((resolve) => setTimeout(resolve, 100));
+
+    await presenceClientA.shutdown();
 
     // Client A connected, disconnected thrice
     expect(presenceState.SERVER_A['client-A'].length).to.equal(6);
@@ -170,10 +145,6 @@ describe('Cluster Messaging - Cluster', function () {
       SERVER_B: {},
       SERVER_C: {},
     };
-    const recordNameA = uuid.v4();
-    const recordNameB = uuid.v4();
-    const recordValueA = `REC_A--${uuid.v4()}`;
-    const recordValueB = `REC_B--${uuid.v4()}`;
 
     const serverC = await getServer(
       'server-C',
@@ -187,29 +158,26 @@ describe('Cluster Messaging - Cluster', function () {
         pipelinePort: NANOMSG_PIPELINE_PORT_A,
       }],
     );
-    await new Promise((resolve) => setTimeout(resolve, 1000));
-    // Presense
-    const presenseClientA = await getClient(`${HOST}:${DEEPSTREAM_PORT_A}`, 'presenseA');
-    presenseClientA.presence.subscribe((deviceId:string, login:boolean) => {
-      console.log('PRESENSE SERVER A:', deviceId, login);
+    await new Promise((resolve) => setTimeout(resolve, 100));
+    // Presence
+    const presenceClientA = await getClient(`${HOST}:${DEEPSTREAM_PORT_A}`, 'presenceA');
+    presenceClientA.presence.subscribe((deviceId:string, login:boolean) => {
       if (!presenceState.SERVER_A[deviceId]) {
         presenceState.SERVER_A[deviceId] = [login];
       } else {
         presenceState.SERVER_A[deviceId].push(login);
       }
     });
-    const presenseClientB = await getClient(`${HOST}:${DEEPSTREAM_PORT_B}`, 'presenseB');
-    presenseClientB.presence.subscribe((deviceId:string, login:boolean) => {
-      console.log('PRESENSE SERVER B:', deviceId, login);
+    const presenceClientB = await getClient(`${HOST}:${DEEPSTREAM_PORT_B}`, 'presenceB');
+    presenceClientB.presence.subscribe((deviceId:string, login:boolean) => {
       if (!presenceState.SERVER_B[deviceId]) {
         presenceState.SERVER_B[deviceId] = [login];
       } else {
         presenceState.SERVER_B[deviceId].push(login);
       }
     });
-    const presenseClientC = await getClient(`${HOST}:${DEEPSTREAM_PORT_C}`, 'presenseC');
-    presenseClientC.presence.subscribe((deviceId:string, login:boolean) => {
-      console.log('PRESENSE SERVER C:', deviceId, login);
+    const presenceClientC = await getClient(`${HOST}:${DEEPSTREAM_PORT_C}`, 'presenceC');
+    presenceClientC.presence.subscribe((deviceId:string, login:boolean) => {
       if (!presenceState.SERVER_C[deviceId]) {
         presenceState.SERVER_C[deviceId] = [login];
       } else {
@@ -217,54 +185,36 @@ describe('Cluster Messaging - Cluster', function () {
       }
     });
 
+    await new Promise((resolve) => setTimeout(resolve, 100));
+
     // Client A --> Server A
     let clientA = await getClient(`${HOST}:${DEEPSTREAM_PORT_A}`, 'client-A');
-    let recordA = clientA.record.getRecord(recordNameA);
-    recordA.set({ value: recordValueA }, async () => {
-      recordA.discard();
-      await clientA.shutdown();
-    });
+    await clientA.shutdown();
 
     // Client A --> Server B
     clientA = await getClient(`${HOST}:${DEEPSTREAM_PORT_B}`, 'client-A');
-    recordA = clientA.record.getRecord(recordNameA);
-    recordA.set({ value: recordValueB }, async () => {
-      recordA.discard();
-      await clientA.shutdown();
-    });
+    await clientA.shutdown();
 
     // Client B --> Server B
     let clientB = await getClient(`${HOST}:${DEEPSTREAM_PORT_B}`, 'client-B');
-    let recordB = clientB.record.getRecord(recordNameB);
-    recordB.set({ value: recordValueB }, async () => {
-      recordB.discard();
-      await clientB.shutdown();
-    });
+    await clientB.shutdown();
 
     // Client A --> Server A
     clientA = await getClient(`${HOST}:${DEEPSTREAM_PORT_A}`, 'client-A');
-    recordA = clientA.record.getRecord(recordNameA);
-    recordA.set({ value: 'END' }, async () => {
-      recordA.discard();
-      await clientA.shutdown();
-    });
+    await clientA.shutdown();
 
     // Client B --> Server B
     clientB = await getClient(`${HOST}:${DEEPSTREAM_PORT_B}`, 'client-B');
-    recordB = clientB.record.getRecord(recordNameB);
-    recordB.set({ value: 'END' }, async () => {
-      recordB.discard();
-      await clientB.shutdown();
-    });
+    await clientB.shutdown();
 
-    await new Promise((resolve) => setTimeout(resolve, 2000));
-    console.log('\n\nPRESENSE RECORD ON CLUSTER\n', presenceState);
-    await presenseClientA.shutdown();
-    await presenseClientB.shutdown();
-    await presenseClientC.shutdown();
+    await new Promise((resolve) => setTimeout(resolve, 100));
+
+    await presenceClientA.shutdown();
+    await presenceClientB.shutdown();
+    await presenceClientC.shutdown();
     await serverC.shutdown();
 
-    // Server A Presense
+    // Server A Presence
     // Client A connected, disconnected thrice
     expect(presenceState.SERVER_A['client-A'].length).to.equal(6);
     expect(presenceState.SERVER_A['client-A'][0]).to.equal(true);
@@ -281,7 +231,7 @@ describe('Cluster Messaging - Cluster', function () {
     expect(presenceState.SERVER_A['client-B'][2]).to.equal(true);
     expect(presenceState.SERVER_A['client-B'][3]).to.equal(false);
 
-    // Server B Presense
+    // Server B Presence
     // Client Å connected, disconnected thrice
     expect(presenceState.SERVER_B['client-A'].length).to.equal(6);
     expect(presenceState.SERVER_B['client-A'][0]).to.equal(true);
@@ -298,7 +248,7 @@ describe('Cluster Messaging - Cluster', function () {
     expect(presenceState.SERVER_B['client-B'][2]).to.equal(true);
     expect(presenceState.SERVER_B['client-B'][3]).to.equal(false);
 
-    // Server C Presense
+    // Server C Presence
     // Client A connected, disconnected thrice
     expect(presenceState.SERVER_C['client-A'].length).to.equal(6);
     expect(presenceState.SERVER_C['client-A'][0]).to.equal(true);
