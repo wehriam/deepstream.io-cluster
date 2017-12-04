@@ -1,7 +1,7 @@
 // @flow
 
 const uuid = require('uuid');
-// const { expect } = require('chai');
+const { expect } = require('chai');
 const { getServer } = require('./lib/server');
 const { getClient } = require('./lib/client');
 
@@ -112,6 +112,22 @@ describe('Cluster Messaging - Single Node', function () {
     await new Promise((resolve) => setTimeout(resolve, 2000));
     console.log('\n\nPRESENSE RECORD ON SINGLE NODE\n', presenceState);
     await presenseClientA.shutdown();
+
+    // Client A connected, disconnected thrice
+    expect(presenceState.SERVER_A['client-A'].length).to.equal(6);
+    expect(presenceState.SERVER_A['client-A'][0]).to.equal(true);
+    expect(presenceState.SERVER_A['client-A'][1]).to.equal(false);
+    expect(presenceState.SERVER_A['client-A'][2]).to.equal(true);
+    expect(presenceState.SERVER_A['client-A'][3]).to.equal(false);
+    expect(presenceState.SERVER_A['client-A'][4]).to.equal(true);
+    expect(presenceState.SERVER_A['client-A'][5]).to.equal(false);
+
+    // Client B connected, disconnected twice
+    expect(presenceState.SERVER_A['client-B'].length).to.equal(4);
+    expect(presenceState.SERVER_A['client-B'][0]).to.equal(true);
+    expect(presenceState.SERVER_A['client-B'][1]).to.equal(false);
+    expect(presenceState.SERVER_A['client-B'][2]).to.equal(true);
+    expect(presenceState.SERVER_A['client-B'][3]).to.equal(false);
   });
 });
 
@@ -247,5 +263,56 @@ describe('Cluster Messaging - Cluster', function () {
     await presenseClientB.shutdown();
     await presenseClientC.shutdown();
     await serverC.shutdown();
+
+    // Server A Presense
+    // Client A connected, disconnected thrice
+    expect(presenceState.SERVER_A['client-A'].length).to.equal(6);
+    expect(presenceState.SERVER_A['client-A'][0]).to.equal(true);
+    expect(presenceState.SERVER_A['client-A'][1]).to.equal(false);
+    expect(presenceState.SERVER_A['client-A'][2]).to.equal(true);
+    expect(presenceState.SERVER_A['client-A'][3]).to.equal(false);
+    expect(presenceState.SERVER_A['client-A'][4]).to.equal(true);
+    expect(presenceState.SERVER_A['client-A'][5]).to.equal(false);
+
+    // Client B connected, disconnected twice
+    expect(presenceState.SERVER_A['client-B'].length).to.equal(4);
+    expect(presenceState.SERVER_A['client-B'][0]).to.equal(true);
+    expect(presenceState.SERVER_A['client-B'][1]).to.equal(false);
+    expect(presenceState.SERVER_A['client-B'][2]).to.equal(true);
+    expect(presenceState.SERVER_A['client-B'][3]).to.equal(false);
+
+    // Server B Presense
+    // Client Å connected, disconnected thrice
+    expect(presenceState.SERVER_B['client-A'].length).to.equal(6);
+    expect(presenceState.SERVER_B['client-A'][0]).to.equal(true);
+    expect(presenceState.SERVER_B['client-A'][1]).to.equal(false);
+    expect(presenceState.SERVER_B['client-A'][2]).to.equal(true);
+    expect(presenceState.SERVER_B['client-A'][3]).to.equal(false);
+    expect(presenceState.SERVER_B['client-A'][4]).to.equal(true);
+    expect(presenceState.SERVER_B['client-A'][5]).to.equal(false);
+
+    // Client B connected, disconnected twice
+    expect(presenceState.SERVER_B['client-B'].length).to.equal(4);
+    expect(presenceState.SERVER_B['client-B'][0]).to.equal(true);
+    expect(presenceState.SERVER_B['client-B'][1]).to.equal(false);
+    expect(presenceState.SERVER_B['client-B'][2]).to.equal(true);
+    expect(presenceState.SERVER_B['client-B'][3]).to.equal(false);
+
+    // Server C Presense
+    // Client A connected, disconnected thrice
+    expect(presenceState.SERVER_C['client-A'].length).to.equal(6);
+    expect(presenceState.SERVER_C['client-A'][0]).to.equal(true);
+    expect(presenceState.SERVER_C['client-A'][1]).to.equal(false);
+    expect(presenceState.SERVER_C['client-A'][2]).to.equal(true);
+    expect(presenceState.SERVER_C['client-A'][3]).to.equal(false);
+    expect(presenceState.SERVER_C['client-A'][4]).to.equal(true);
+    expect(presenceState.SERVER_C['client-A'][5]).to.equal(false);
+
+    // Client B connected, disconnected twice
+    expect(presenceState.SERVER_C['client-B'].length).to.equal(4);
+    expect(presenceState.SERVER_C['client-B'][0]).to.equal(true);
+    expect(presenceState.SERVER_C['client-B'][1]).to.equal(false);
+    expect(presenceState.SERVER_C['client-B'][2]).to.equal(true);
+    expect(presenceState.SERVER_C['client-B'][3]).to.equal(false);
   });
 });
