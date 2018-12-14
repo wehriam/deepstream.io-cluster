@@ -10,6 +10,7 @@ const HOST = '127.0.0.1';
 const DEEPSTREAM_SEED_PORT = getRandomPort();
 const PUBSUB_SEED_PORT = getRandomPort();
 const PIPELINE_SEED_PORT = getRandomPort();
+const NODE_COUNT = 16;
 
 describe('Scaling', () => {
   jest.setTimeout(10000);
@@ -42,16 +43,17 @@ describe('Scaling', () => {
     const seedClient = await getClient(`${HOST}:${DEEPSTREAM_SEED_PORT}`, 'client-0');
     servers.push(seedServer);
     clients.push(seedClient);
-    for (let i = 1; i < 4; i += 1) {
+    for (let i = 1; i < NODE_COUNT; i += 1) {
+      const deepstreamPort = getRandomPort();
       const server = await getServer(
         `server-${i}`,
         HOST,
-        DEEPSTREAM_SEED_PORT + (i * 3),
-        PUBSUB_SEED_PORT + (i * 3) + 1,
-        PIPELINE_SEED_PORT + (i * 3) + 2,
+        deepstreamPort,
+        getRandomPort(),
+        getRandomPort(),
         [seedServerAddress],
       );
-      const client = await getClient(`${HOST}:${DEEPSTREAM_SEED_PORT + (i * 3)}`, `client-${i}`);
+      const client = await getClient(`${HOST}:${deepstreamPort}`, `client-${i}`);
       servers.push(server);
       clients.push(client);
     }
