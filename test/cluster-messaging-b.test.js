@@ -1,18 +1,19 @@
 // @flow
 
 // const uuid = require('uuid');
-const { expect } = require('chai');
+const expect = require('expect');
 const { getServer } = require('./lib/server');
 const { getClient } = require('./lib/client');
+const { getRandomPort } = require('./lib/ports');
 
 const HOST = '127.0.0.1';
-const DEEPSTREAM_SEED_PORT = 6000;
-const PUBSUB_SEED_PORT = 6001;
-const PIPELINE_SEED_PORT = 6002;
+const DEEPSTREAM_SEED_PORT = getRandomPort();
+const PUBSUB_SEED_PORT = getRandomPort();
+const PIPELINE_SEED_PORT = getRandomPort();
 const CLIENT_COUNT = 8;
 
-describe('Cluster Messaging', function () {
-  this.timeout(10000);
+describe('Cluster Messaging', () => {
+  jest.setTimeout(10000);
   const servers = [];
   const clients = [];
 
@@ -31,7 +32,7 @@ describe('Cluster Messaging', function () {
     pipelinePort: PIPELINE_SEED_PORT,
   };
 
-  before(async () => {
+  beforeAll(async () => {
     const seedServer = await getServer(
       'server-0',
       HOST,
@@ -58,7 +59,7 @@ describe('Cluster Messaging', function () {
     await new Promise((resolve) => setTimeout(resolve, 100));
   });
 
-  after(async () => {
+  afterAll(async () => {
     for (let i = 0; i < servers.length; i += 1) {
       await clients[i].shutdown();
       await servers[i].shutdown();
@@ -78,8 +79,8 @@ describe('Cluster Messaging', function () {
     const presenceB = new Set(await new Promise((resolve) => clientB.presence.getAll(resolve)));
     presenceA.add(clientA.username);
     presenceB.add(clientB.username);
-    expect(presenceA.size).to.equal(CLIENT_COUNT);
-    expect(presenceB.size).to.equal(CLIENT_COUNT);
+    expect(presenceA.size).toEqual(CLIENT_COUNT);
+    expect(presenceB.size).toEqual(CLIENT_COUNT);
     clientA.presence.subscribe((username:string, login:boolean) => {
       if (login) {
         presenceA.add(username);
@@ -95,16 +96,37 @@ describe('Cluster Messaging', function () {
       }
     });
     await new Promise((resolve) => setTimeout(resolve, 100));
-    for (let i = 0; i < 5; i += 1) {
+    for (let i = 0; i < 20; i += 1) {
       randomizeClientC();
       await clientC.shutdown();
-      await new Promise((resolve) => setTimeout(resolve, 50));
-      expect(presenceA.size).to.equal(CLIENT_COUNT - 1);
-      expect(presenceB.size).to.equal(CLIENT_COUNT - 1);
+      await new Promise((resolve) => setTimeout(resolve, 10));
+      expect(presenceA.size).toEqual(CLIENT_COUNT - 1);
+      expect(presenceB.size).toEqual(CLIENT_COUNT - 1);
       await clientC.loginAgain();
-      await new Promise((resolve) => setTimeout(resolve, 50));
-      expect(presenceA.size).to.equal(CLIENT_COUNT);
-      expect(presenceB.size).to.equal(CLIENT_COUNT);
+      await new Promise((resolve) => setTimeout(resolve, 10));
+      expect(presenceA.size).toEqual(CLIENT_COUNT);
+      expect(presenceB.size).toEqual(CLIENT_COUNT);
+    }
+    const tempClients = [];
+    for (let i = 0; i < CLIENT_COUNT; i += 1) {
+      const tempClient = await getClient(`${HOST}:${DEEPSTREAM_SEED_PORT + (i * 3)}`, `client-temp-${i}`);
+      tempClients.push(tempClient);
+    }
+    await new Promise((resolve) => setTimeout(resolve, 200));
+    expect(presenceA.size).toEqual(CLIENT_COUNT * 2);
+    expect(presenceB.size).toEqual(CLIENT_COUNT * 2);
+    await Promise.all(tempClients.map((tempClient) => tempClient.shutdown()));
+    await new Promise((resolve) => setTimeout(resolve, 200));
+    expect(presenceA.size).toEqual(CLIENT_COUNT);
+    expect(presenceB.size).toEqual(CLIENT_COUNT);
+    await Promise.all(tempClients.map((tempClient) => tempClient.loginAgain()));
+    await new Promise((resolve) => setTimeout(resolve, 200));
+    while (tempClients.length > 0) {
+      const tempClient = tempClients.pop();
+      await tempClient.shutdown();
+      await new Promise((resolve) => setTimeout(resolve, 100));
+      expect(presenceA.size).toEqual(CLIENT_COUNT + tempClients.length);
+      expect(presenceB.size).toEqual(CLIENT_COUNT + tempClients.length);
     }
   });
 });

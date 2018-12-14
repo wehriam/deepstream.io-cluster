@@ -1,26 +1,32 @@
 // @flow
 
 const uuid = require('uuid');
-const { expect } = require('chai');
+const expect = require('expect');
 const { getServer } = require('./lib/server');
 const { getClient } = require('./lib/client');
+const { getRandomPort } = require('./lib/ports');
 
 const HOST = '127.0.0.1';
-const DEEPSTREAM_PORT_A = 6020;
-const NANOMSG_PUBSUB_PORT_A = 6021;
-const NANOMSG_PIPELINE_PORT_A = 6022;
-const DEEPSTREAM_PORT_B = 7020;
-const NANOMSG_PUBSUB_PORT_B = 7021;
-const NANOMSG_PIPELINE_PORT_B = 7022;
-const DEEPSTREAM_PORT_C = 8020;
-const NANOMSG_PUBSUB_PORT_C = 8021;
-const NANOMSG_PIPELINE_PORT_C = 8022;
-const DEEPSTREAM_PORT_D = 9020;
-const NANOMSG_PUBSUB_PORT_D = 9021;
-const NANOMSG_PIPELINE_PORT_D = 9022;
+const DEEPSTREAM_PORT_A = getRandomPort();
+const NANOMSG_PUBSUB_PORT_A = getRandomPort();
+const NANOMSG_PIPELINE_PORT_A = getRandomPort();
+const DEEPSTREAM_PORT_B = getRandomPort();
+const NANOMSG_PUBSUB_PORT_B = getRandomPort();
+const NANOMSG_PIPELINE_PORT_B = getRandomPort();
+const DEEPSTREAM_PORT_C = getRandomPort();
+const NANOMSG_PUBSUB_PORT_C = getRandomPort();
+const NANOMSG_PIPELINE_PORT_C = getRandomPort();
+const DEEPSTREAM_PORT_D = getRandomPort();
+const NANOMSG_PUBSUB_PORT_D = getRandomPort();
+const NANOMSG_PIPELINE_PORT_D = getRandomPort();
+const DEEPSTREAM_PORT_E = getRandomPort();
+const NANOMSG_PUBSUB_PORT_E = getRandomPort();
+const NANOMSG_PIPELINE_PORT_E = getRandomPort();
 
-describe('Cluster', function () {
-  this.timeout(10000);
+const messageTimeout = () => new Promise((resolve) => setTimeout(resolve, 250));
+
+describe('Cluster', () => {
+  jest.setTimeout(10000);
   let serverA;
   let serverB;
   let serverC;
@@ -34,7 +40,7 @@ describe('Cluster', function () {
     pipelinePort: NANOMSG_PIPELINE_PORT_A,
   };
 
-  before(async () => {
+  beforeAll(async () => {
     [serverA, serverB, serverC] = await Promise.all([
       getServer(
         'server-A',
@@ -67,7 +73,7 @@ describe('Cluster', function () {
     ]);
   });
 
-  after(async () => {
+  afterAll(async () => {
     await Promise.all([
       clientA.shutdown(),
       clientB.shutdown(),
@@ -158,6 +164,7 @@ describe('Cluster', function () {
       });
     });
     clientA.record.unlisten('listen/*');
+    await messageTimeout();
   });
 
   it('Should listen for events.', async () => {
@@ -179,9 +186,9 @@ describe('Cluster', function () {
     const usernamesA = await new Promise((resolve) => clientA.presence.getAll(resolve));
     const usernamesB = await new Promise((resolve) => clientB.presence.getAll(resolve));
     const usernamesC = await new Promise((resolve) => clientC.presence.getAll(resolve));
-    expect(usernamesA).to.include.members(['client-B', 'client-C']);
-    expect(usernamesB).to.include.members(['client-A', 'client-C']);
-    expect(usernamesC).to.include.members(['client-A', 'client-B']);
+    expect(usernamesA).toEqual(expect.arrayContaining(['client-B', 'client-C']));
+    expect(usernamesB).toEqual(expect.arrayContaining(['client-A', 'client-C']));
+    expect(usernamesC).toEqual(expect.arrayContaining(['client-A', 'client-B']));
   });
 
   it('Should receive presence events.', async () => {
@@ -225,7 +232,7 @@ describe('Cluster', function () {
     await new Promise((resolve) => setTimeout(resolve, 1000));
     const clientD = await getClient(`${HOST}:${DEEPSTREAM_PORT_D}`, 'client-D');
     const usernamesD = await new Promise((resolve) => clientD.presence.getAll(resolve));
-    expect(usernamesD).to.include.members(['client-A', 'client-B', 'client-C']);
+    expect(usernamesD).toEqual(expect.arrayContaining(['client-A', 'client-B', 'client-C']));
     await clientD.shutdown();
     await serverD.shutdown();
   });
@@ -298,9 +305,10 @@ describe('Cluster', function () {
         }
       });
     });
+    clientA.record.unlisten('listen/*');
+    await messageTimeout();
     await clientD.shutdown();
     await serverD.shutdown();
-    clientA.record.unlisten('listen/*');
   });
 
   it('Should sync events with a new server.', async () => {
@@ -328,72 +336,73 @@ describe('Cluster', function () {
     await eventAPromise;
     await clientD.shutdown();
     await serverD.shutdown();
+    await messageTimeout();
   });
 
   it('Should add and remove peers.', async () => {
     const beforePeersServerNames = serverA.getPeers().map((peer) => peer.serverName);
-    expect(beforePeersServerNames).to.eql(['server-B', 'server-C']);
-    const serverD = await getServer(
-      'server-D',
+    expect(beforePeersServerNames).toEqual(['server-B', 'server-C']);
+    const serverE = await getServer(
+      'server-E',
       HOST,
-      DEEPSTREAM_PORT_D,
-      NANOMSG_PUBSUB_PORT_D,
-      NANOMSG_PIPELINE_PORT_D,
+      DEEPSTREAM_PORT_E,
+      NANOMSG_PUBSUB_PORT_E,
+      NANOMSG_PIPELINE_PORT_E,
     );
     const addPeerAPromise = new Promise((resolve) => {
       serverA.onAddPeer((peerAddress) => {
-        if (peerAddress.serverName === 'server-D') {
+        if (peerAddress.serverName === 'server-E') {
           resolve();
         }
       });
     });
     const addPeerBPromise = new Promise((resolve) => {
       serverB.onAddPeer((peerAddress) => {
-        if (peerAddress.serverName === 'server-D') {
+        if (peerAddress.serverName === 'server-E') {
           resolve();
         }
       });
     });
     const removePeerAPromise = new Promise((resolve) => {
       serverA.onRemovePeer((peerAddress) => {
-        if (peerAddress.serverName === 'server-D') {
+        if (peerAddress.serverName === 'server-E') {
           resolve();
         }
       });
     });
     const removePeerBPromise = new Promise((resolve) => {
       serverB.onRemovePeer((peerAddress) => {
-        if (peerAddress.serverName === 'server-D') {
+        if (peerAddress.serverName === 'server-E') {
           resolve();
         }
       });
     });
     serverA.addPeer({
       host: HOST,
-      pubsubPort: NANOMSG_PUBSUB_PORT_D,
-      pipelinePort: NANOMSG_PIPELINE_PORT_D,
+      pubsubPort: NANOMSG_PUBSUB_PORT_E,
+      pipelinePort: NANOMSG_PIPELINE_PORT_E,
     });
     await new Promise((resolve) => setTimeout(resolve, 1000));
     await addPeerAPromise;
     await addPeerBPromise;
     const peers = serverA.getPeers().map((peer) => peer.serverName);
-    expect(peers).to.eql(['server-B', 'server-C', 'server-D']);
-    await serverD.shutdown();
+    expect(peers).toEqual(['server-B', 'server-C', 'server-E']);
+    await serverE.shutdown();
     await serverA.removePeer({
       host: HOST,
-      pubsubPort: NANOMSG_PUBSUB_PORT_D,
-      pipelinePort: NANOMSG_PIPELINE_PORT_D,
+      pubsubPort: NANOMSG_PUBSUB_PORT_E,
+      pipelinePort: NANOMSG_PIPELINE_PORT_E,
     });
     await removePeerAPromise;
     await removePeerBPromise;
     const afterPeersServerNames = serverA.getPeers().map((peer) => peer.serverName);
-    expect(afterPeersServerNames).to.eql(['server-B', 'server-C']);
+    expect(afterPeersServerNames).toEqual(['server-B', 'server-C']);
     const afterPeersHosts = serverA.getPeers().map((peer) => peer.host);
-    expect(afterPeersHosts).to.eql([HOST, HOST]);
+    expect(afterPeersHosts).toEqual([HOST, HOST]);
     const afterPeersPubsubPorts = serverA.getPeers().map((peer) => peer.pubsubPort);
-    expect(afterPeersPubsubPorts).to.eql([NANOMSG_PUBSUB_PORT_B, NANOMSG_PUBSUB_PORT_C]);
+    expect(afterPeersPubsubPorts).toEqual([NANOMSG_PUBSUB_PORT_B, NANOMSG_PUBSUB_PORT_C]);
     const afterPeersPipelinePorts = serverA.getPeers().map((peer) => peer.pipelinePort);
-    expect(afterPeersPipelinePorts).to.eql([NANOMSG_PIPELINE_PORT_B, NANOMSG_PIPELINE_PORT_C]);
+    expect(afterPeersPipelinePorts).toEqual([NANOMSG_PIPELINE_PORT_B, NANOMSG_PIPELINE_PORT_C]);
   });
 });
 

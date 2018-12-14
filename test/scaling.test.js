@@ -1,17 +1,18 @@
 // @flow
 
 const uuid = require('uuid');
-const { expect } = require('chai');
+const expect = require('expect');
 const { getServer } = require('./lib/server');
 const { getClient } = require('./lib/client');
+const { getRandomPort } = require('./lib/ports');
 
 const HOST = '127.0.0.1';
-const DEEPSTREAM_SEED_PORT = 6000;
-const PUBSUB_SEED_PORT = 6001;
-const PIPELINE_SEED_PORT = 6002;
+const DEEPSTREAM_SEED_PORT = getRandomPort();
+const PUBSUB_SEED_PORT = getRandomPort();
+const PIPELINE_SEED_PORT = getRandomPort();
 
-describe('Scaling', function () {
-  this.timeout(10000);
+describe('Scaling', () => {
+  jest.setTimeout(10000);
   const servers = [];
   const clients = [];
 
@@ -30,7 +31,7 @@ describe('Scaling', function () {
     pipelinePort: PIPELINE_SEED_PORT,
   };
 
-  before(async () => {
+  beforeAll(async () => {
     const seedServer = await getServer(
       'server-0',
       HOST,
@@ -56,7 +57,7 @@ describe('Scaling', function () {
     }
   });
 
-  after(async () => {
+  afterAll(async () => {
     for (let i = 0; i < servers.length; i += 1) {
       await clients[i].shutdown();
       await servers[i].shutdown();
@@ -163,7 +164,7 @@ describe('Scaling', function () {
       const usernames = await new Promise((resolve) => client.presence.getAll(resolve));
       usernames.sort();
       expectedUsernames.sort();
-      expect(usernames).to.eql(expectedUsernames);
+      expect(usernames).toEqual(expectedUsernames);
     }
   });
 });

@@ -1,39 +1,39 @@
 // @flow
 
-// Based on deepstream.io-msg-connector-template 
+// Based on deepstream.io-msg-connector-template
 // https://github.com/deepstreamIO/deepstream.io-msg-connector-template
 
 const uuid = require('uuid');
 const { EventEmitter } = require('events');
 const ClusterNode = require('../src/cluster-node');
-const { expect } = require('chai');
+const expect = require('expect');
 
 describe('The cluster node adapter has the correct structure', () => {
   let clusterNode;
 
-  before(async () => {
+  beforeAll(async () => {
     clusterNode = new ClusterNode({
       serverName: uuid.v4(),
     });
-    expect(clusterNode.isReady).to.equal(false);
+    expect(clusterNode.isReady).toEqual(false);
     await new Promise((resolve, reject) => {
       clusterNode.on('ready', resolve);
       clusterNode.on('error', reject);
     });
-    expect(clusterNode.isReady).to.equal(true);
+    expect(clusterNode.isReady).toEqual(true);
   });
 
-  before(async () => {
+  beforeAll(async () => {
     await clusterNode.close();
   });
 
   it('implements the clusterNode interface', () => {
-    expect(typeof clusterNode.sendDirect).to.equal('function');
-    expect(typeof clusterNode.send).to.equal('function');
-    expect(typeof clusterNode.subscribe).to.equal('function');
-    expect(typeof clusterNode.getStateRegistry).to.equal('function');
-    expect(typeof clusterNode.close).to.equal('function');
-    expect(typeof clusterNode.isReady).to.equal('boolean');
-    expect(clusterNode instanceof EventEmitter).to.equal(true);
+    expect(typeof clusterNode.sendDirect).toEqual('function');
+    expect(typeof clusterNode.send).toEqual('function');
+    expect(typeof clusterNode.subscribe).toEqual('function');
+    expect(typeof clusterNode.getStateRegistry).toEqual('function');
+    expect(typeof clusterNode.close).toEqual('function');
+    expect(typeof clusterNode.isReady).toEqual('boolean');
+    expect(clusterNode instanceof EventEmitter).toEqual(true);
   });
 });

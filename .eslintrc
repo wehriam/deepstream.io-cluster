@@ -1,4 +1,8 @@
 {
   "parser": "babel-eslint",
-  "extends": ["bunchtogether"]
+  "extends": ["bunchtogether"],
+  "plugins": ["jest"],
+  "env": {
+    "jest": true
+  }
 }

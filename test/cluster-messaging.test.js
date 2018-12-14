@@ -1,26 +1,27 @@
 // @flow
 
-const { expect } = require('chai');
+const expect = require('expect');
 const { getServer } = require('./lib/server');
 const { getClient } = require('./lib/client');
+const { getRandomPort } = require('./lib/ports');
 
 const HOST = '127.0.0.1';
-const DEEPSTREAM_PORT_A = 6020;
-const NANOMSG_PUBSUB_PORT_A = 6021;
-const NANOMSG_PIPELINE_PORT_A = 6022;
-const DEEPSTREAM_PORT_B = 7020;
-const NANOMSG_PUBSUB_PORT_B = 7021;
-const NANOMSG_PIPELINE_PORT_B = 7022;
-const DEEPSTREAM_PORT_C = 8020;
-const NANOMSG_PUBSUB_PORT_C = 8021;
-const NANOMSG_PIPELINE_PORT_C = 8022;
+const DEEPSTREAM_PORT_A = getRandomPort();
+const NANOMSG_PUBSUB_PORT_A = getRandomPort();
+const NANOMSG_PIPELINE_PORT_A = getRandomPort();
+const DEEPSTREAM_PORT_B = getRandomPort();
+const NANOMSG_PUBSUB_PORT_B = getRandomPort();
+const NANOMSG_PIPELINE_PORT_B = getRandomPort();
+const DEEPSTREAM_PORT_C = getRandomPort();
+const NANOMSG_PUBSUB_PORT_C = getRandomPort();
+const NANOMSG_PIPELINE_PORT_C = getRandomPort();
 
-describe('Cluster Messaging - Single Node', function () {
-  this.timeout(30000);
+describe('Cluster Messaging - Single Node', () => {
+  jest.setTimeout(30000);
   let serverA;
   let serverB;
 
-  before(async () => {
+  beforeAll(async () => {
     serverA = await getServer(
       'server-A',
       HOST,
@@ -43,7 +44,7 @@ describe('Cluster Messaging - Single Node', function () {
     );
   });
 
-  after(async () => {
+  afterAll(async () => {
     await serverA.shutdown();
     await serverB.shutdown();
   });
@@ -89,30 +90,30 @@ describe('Cluster Messaging - Single Node', function () {
     await presenceClientA.shutdown();
 
     // Client A connected, disconnected thrice
-    expect(presenceState.SERVER_A['client-A'].length).to.equal(6);
-    expect(presenceState.SERVER_A['client-A'][0]).to.equal(true);
-    expect(presenceState.SERVER_A['client-A'][1]).to.equal(false);
-    expect(presenceState.SERVER_A['client-A'][2]).to.equal(true);
-    expect(presenceState.SERVER_A['client-A'][3]).to.equal(false);
-    expect(presenceState.SERVER_A['client-A'][4]).to.equal(true);
-    expect(presenceState.SERVER_A['client-A'][5]).to.equal(false);
+    expect(presenceState.SERVER_A['client-A'].length).toEqual(6);
+    expect(presenceState.SERVER_A['client-A'][0]).toEqual(true);
+    expect(presenceState.SERVER_A['client-A'][1]).toEqual(false);
+    expect(presenceState.SERVER_A['client-A'][2]).toEqual(true);
+    expect(presenceState.SERVER_A['client-A'][3]).toEqual(false);
+    expect(presenceState.SERVER_A['client-A'][4]).toEqual(true);
+    expect(presenceState.SERVER_A['client-A'][5]).toEqual(false);
 
     // Client B connected, disconnected twice
-    expect(presenceState.SERVER_A['client-B'].length).to.equal(4);
-    expect(presenceState.SERVER_A['client-B'][0]).to.equal(true);
-    expect(presenceState.SERVER_A['client-B'][1]).to.equal(false);
-    expect(presenceState.SERVER_A['client-B'][2]).to.equal(true);
-    expect(presenceState.SERVER_A['client-B'][3]).to.equal(false);
+    expect(presenceState.SERVER_A['client-B'].length).toEqual(4);
+    expect(presenceState.SERVER_A['client-B'][0]).toEqual(true);
+    expect(presenceState.SERVER_A['client-B'][1]).toEqual(false);
+    expect(presenceState.SERVER_A['client-B'][2]).toEqual(true);
+    expect(presenceState.SERVER_A['client-B'][3]).toEqual(false);
   });
 });
 
 
-describe('Cluster Messaging - Cluster', function () {
-  this.timeout(30000);
+describe('Cluster Messaging - Cluster', () => {
+  jest.setTimeout(30000);
   let serverA;
   let serverB;
 
-  before(async () => {
+  beforeAll(async () => {
     serverA = await getServer(
       'server-A',
       HOST,
@@ -135,7 +136,7 @@ describe('Cluster Messaging - Cluster', function () {
     );
   });
 
-  after(async () => {
+  afterAll(async () => {
     await serverA.shutdown();
     await serverB.shutdown();
   });
@@ -216,53 +217,53 @@ describe('Cluster Messaging - Cluster', function () {
 
     // Server A Presence
     // Client A connected, disconnected thrice
-    expect(presenceState.SERVER_A['client-A'].length).to.equal(6);
-    expect(presenceState.SERVER_A['client-A'][0]).to.equal(true);
-    expect(presenceState.SERVER_A['client-A'][1]).to.equal(false);
-    expect(presenceState.SERVER_A['client-A'][2]).to.equal(true);
-    expect(presenceState.SERVER_A['client-A'][3]).to.equal(false);
-    expect(presenceState.SERVER_A['client-A'][4]).to.equal(true);
-    expect(presenceState.SERVER_A['client-A'][5]).to.equal(false);
+    expect(presenceState.SERVER_A['client-A'].length).toEqual(6);
+    expect(presenceState.SERVER_A['client-A'][0]).toEqual(true);
+    expect(presenceState.SERVER_A['client-A'][1]).toEqual(false);
+    expect(presenceState.SERVER_A['client-A'][2]).toEqual(true);
+    expect(presenceState.SERVER_A['client-A'][3]).toEqual(false);
+    expect(presenceState.SERVER_A['client-A'][4]).toEqual(true);
+    expect(presenceState.SERVER_A['client-A'][5]).toEqual(false);
 
     // Client B connected, disconnected twice
-    expect(presenceState.SERVER_A['client-B'].length).to.equal(4);
-    expect(presenceState.SERVER_A['client-B'][0]).to.equal(true);
-    expect(presenceState.SERVER_A['client-B'][1]).to.equal(false);
-    expect(presenceState.SERVER_A['client-B'][2]).to.equal(true);
-    expect(presenceState.SERVER_A['client-B'][3]).to.equal(false);
+    expect(presenceState.SERVER_A['client-B'].length).toEqual(4);
+    expect(presenceState.SERVER_A['client-B'][0]).toEqual(true);
+    expect(presenceState.SERVER_A['client-B'][1]).toEqual(false);
+    expect(presenceState.SERVER_A['client-B'][2]).toEqual(true);
+    expect(presenceState.SERVER_A['client-B'][3]).toEqual(false);
 
     // Server B Presence
     // Client Å connected, disconnected thrice
-    expect(presenceState.SERVER_B['client-A'].length).to.equal(6);
-    expect(presenceState.SERVER_B['client-A'][0]).to.equal(true);
-    expect(presenceState.SERVER_B['client-A'][1]).to.equal(false);
-    expect(presenceState.SERVER_B['client-A'][2]).to.equal(true);
-    expect(presenceState.SERVER_B['client-A'][3]).to.equal(false);
-    expect(presenceState.SERVER_B['client-A'][4]).to.equal(true);
-    expect(presenceState.SERVER_B['client-A'][5]).to.equal(false);
+    expect(presenceState.SERVER_B['client-A'].length).toEqual(6);
+    expect(presenceState.SERVER_B['client-A'][0]).toEqual(true);
+    expect(presenceState.SERVER_B['client-A'][1]).toEqual(false);
+    expect(presenceState.SERVER_B['client-A'][2]).toEqual(true);
+    expect(presenceState.SERVER_B['client-A'][3]).toEqual(false);
+    expect(presenceState.SERVER_B['client-A'][4]).toEqual(true);
+    expect(presenceState.SERVER_B['client-A'][5]).toEqual(false);
 
     // Client B connected, disconnected twice
-    expect(presenceState.SERVER_B['client-B'].length).to.equal(4);
-    expect(presenceState.SERVER_B['client-B'][0]).to.equal(true);
-    expect(presenceState.SERVER_B['client-B'][1]).to.equal(false);
-    expect(presenceState.SERVER_B['client-B'][2]).to.equal(true);
-    expect(presenceState.SERVER_B['client-B'][3]).to.equal(false);
+    expect(presenceState.SERVER_B['client-B'].length).toEqual(4);
+    expect(presenceState.SERVER_B['client-B'][0]).toEqual(true);
+    expect(presenceState.SERVER_B['client-B'][1]).toEqual(false);
+    expect(presenceState.SERVER_B['client-B'][2]).toEqual(true);
+    expect(presenceState.SERVER_B['client-B'][3]).toEqual(false);
 
     // Server C Presence
     // Client A connected, disconnected thrice
-    expect(presenceState.SERVER_C['client-A'].length).to.equal(6);
-    expect(presenceState.SERVER_C['client-A'][0]).to.equal(true);
-    expect(presenceState.SERVER_C['client-A'][1]).to.equal(false);
-    expect(presenceState.SERVER_C['client-A'][2]).to.equal(true);
-    expect(presenceState.SERVER_C['client-A'][3]).to.equal(false);
-    expect(presenceState.SERVER_C['client-A'][4]).to.equal(true);
-    expect(presenceState.SERVER_C['client-A'][5]).to.equal(false);
+    expect(presenceState.SERVER_C['client-A'].length).toEqual(6);
+    expect(presenceState.SERVER_C['client-A'][0]).toEqual(true);
+    expect(presenceState.SERVER_C['client-A'][1]).toEqual(false);
+    expect(presenceState.SERVER_C['client-A'][2]).toEqual(true);
+    expect(presenceState.SERVER_C['client-A'][3]).toEqual(false);
+    expect(presenceState.SERVER_C['client-A'][4]).toEqual(true);
+    expect(presenceState.SERVER_C['client-A'][5]).toEqual(false);
 
     // Client B connected, disconnected twice
-    expect(presenceState.SERVER_C['client-B'].length).to.equal(4);
-    expect(presenceState.SERVER_C['client-B'][0]).to.equal(true);
-    expect(presenceState.SERVER_C['client-B'][1]).to.equal(false);
-    expect(presenceState.SERVER_C['client-B'][2]).to.equal(true);
-    expect(presenceState.SERVER_C['client-B'][3]).to.equal(false);
+    expect(presenceState.SERVER_C['client-B'].length).toEqual(4);
+    expect(presenceState.SERVER_C['client-B'][0]).toEqual(true);
+    expect(presenceState.SERVER_C['client-B'][1]).toEqual(false);
+    expect(presenceState.SERVER_C['client-B'][2]).toEqual(true);
+    expect(presenceState.SERVER_C['client-B'][3]).toEqual(false);
   });
 });

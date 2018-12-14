@@ -1,4 +1,4 @@
-//      
+// @flow
 
 /* eslint-disable no-underscore-dangle */
 
@@ -11,22 +11,22 @@
 const { EventEmitter } = require('events');
 
 module.exports = class DistributedStateRegistry extends EventEmitter {
-                               
-                
-                  
+  data: {[string]: Set<string>}
+  topic: string;
+  options: Object;
 
-  constructor(topic       , options       ) {
+  constructor(topic:string, options:Object) {
     super();
     this.topic = topic;
     this.options = options;
     this.data = {};
   }
 
-  has(name       )         {
+  has(name:string):boolean {
     return !!this.data[name];
   }
 
-  add(name       , serverName         = this.options.serverName)      {
+  add(name:string, serverName?:string = this.options.serverName):void {
     if (!this.data[name]) {
       this.emit('add', name);
     }
@@ -39,7 +39,7 @@ module.exports = class DistributedStateRegistry extends EventEmitter {
     });
   }
 
-  remove(name       , serverName         = this.options.serverName)      {
+  remove(name:string, serverName?:string = this.options.serverName):void {
     if (!this.data[name]) {
       return;
     }
@@ -53,7 +53,7 @@ module.exports = class DistributedStateRegistry extends EventEmitter {
     }
   }
 
-  removeAll(serverName       )      {
+  removeAll(serverName:string):void {
     Object.keys(this.data).forEach((name) => {
       if (!this.data[name]) {
         return;
@@ -65,7 +65,7 @@ module.exports = class DistributedStateRegistry extends EventEmitter {
     });
   }
 
-  getAllServers(name       )               {
+  getAllServers(name:string):Array<string> {
     if (!this.data[name]) {
       return [];
     }
@@ -73,11 +73,11 @@ module.exports = class DistributedStateRegistry extends EventEmitter {
     return servers;
   }
 
-  getAll()               {
+  getAll():Array<string> {
     return Object.keys(this.data);
   }
 
-  getAllMap()                         {
+  getAllMap():{[string]: Set<string>} {
     return this.data;
   }
 };

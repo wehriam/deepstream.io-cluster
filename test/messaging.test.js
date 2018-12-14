@@ -1,25 +1,21 @@
 // @flow
 
-// Based on deepstream.io-msg-connector-template 
+// Based on deepstream.io-msg-connector-template
 // https://github.com/deepstreamIO/deepstream.io-msg-connector-template
 
 import type { SocketSettings } from '../src/cluster-node';
 
-const chai = require('chai');
-const sinon = require('sinon');
-const sinonChai = require('sinon-chai');
+const expect = require('expect');
 const ClusterNode = require('../src/cluster-node');
-
-chai.use(sinonChai);
-const { expect } = chai;
+const { getRandomPort } = require('./lib/ports');
 
 const HOST = '127.0.0.1';
-const NANOMSG_PUBSUB_PORT_A = 7789;
-const NANOMSG_PUBSUB_PORT_B = 7889;
-const NANOMSG_PUBSUB_PORT_C = 7989;
-const NANOMSG_PIPELINE_PORT_A = 8789;
-const NANOMSG_PIPELINE_PORT_B = 8889;
-const NANOMSG_PIPELINE_PORT_C = 8989;
+const NANOMSG_PUBSUB_PORT_A = getRandomPort();
+const NANOMSG_PUBSUB_PORT_B = getRandomPort();
+const NANOMSG_PUBSUB_PORT_C = getRandomPort();
+const NANOMSG_PIPELINE_PORT_A = getRandomPort();
+const NANOMSG_PIPELINE_PORT_B = getRandomPort();
+const NANOMSG_PIPELINE_PORT_C = getRandomPort();
 
 const addressA = {
   host: HOST,
@@ -50,12 +46,12 @@ const getNode = async (serverName:string, bindAddress:SocketSettings, peerAddres
       peerAddresses,
     },
   });
-  expect(node.isReady).to.equal(false);
+  expect(node.isReady).toEqual(false);
   await new Promise((resolve, reject) => {
     node.on('ready', resolve);
     node.on('error', reject);
   });
-  expect(node.isReady).to.equal(true);
+  expect(node.isReady).toEqual(true);
   return node;
 };
 
@@ -63,11 +59,11 @@ describe('Messages are sent between multiple instances', () => {
   let nodeA;
   let nodeB;
   let nodeC;
-  const callbackA = sinon.spy();
-  const callbackB = sinon.spy();
-  const callbackC = sinon.spy();
+  const callbackA = jest.fn();
+  const callbackB = jest.fn();
+  const callbackC = jest.fn();
 
-  before(async () => {
+  beforeAll(async () => {
     nodeA = await getNode('node-A', addressA, []);
     nodeB = await getNode('node-B', addressB, [addressA]);
     nodeC = await getNode('node-C', addressC, [addressA]);
@@ -77,8 +73,10 @@ describe('Messages are sent between multiple instances', () => {
     nodeA.subscribe('topic1', callbackA);
     nodeB.subscribe('topic1', callbackB);
     nodeC.subscribe('topic1', callbackC);
-    expect(callbackA.callCount).to.equal(0);
     await messageTimeout();
+    expect(callbackA).not.toHaveBeenCalled();
+    expect(callbackB).not.toHaveBeenCalled();
+    expect(callbackC).not.toHaveBeenCalled();
   });
 
   it('nodeB sends a message', async () => {
@@ -87,9 +85,9 @@ describe('Messages are sent between multiple instances', () => {
   });
 
   it('nodeA and nodeC have received the message', () => {
-    expect(callbackA).to.have.been.calledWith({ some: 'data' });
-    expect(callbackB).to.not.have.been.called; // eslint-disable-line no-unused-expressions
-    expect(callbackC).to.have.been.calledWith({ some: 'data' });
+    expect(callbackA).toHaveBeenCalledWith({ some: 'data' }, 'node-B');
+    expect(callbackB).not.toHaveBeenCalledWith({ some: 'data' }, 'node-B');
+    expect(callbackC).toHaveBeenCalledWith({ some: 'data' }, 'node-B');
   });
 
   it('nodeC sends a message', async () => {
@@ -98,9 +96,9 @@ describe('Messages are sent between multiple instances', () => {
   });
 
   it('nodeA and nodeB have received the message', () => {
-    expect(callbackA).to.have.been.calledWith({ other: 'value' });
-    expect(callbackB).to.have.been.calledWith({ other: 'value' });
-    expect(callbackC).to.have.been.calledWith({ some: 'data' });
+    expect(callbackA).toHaveBeenCalledWith({ other: 'value' }, 'node-C');
+    expect(callbackB).toHaveBeenCalledWith({ other: 'value' }, 'node-C');
+    expect(callbackC).not.toHaveBeenCalledWith({ other: 'value' }, 'node-C');
   });
 
 
@@ -111,24 +109,26 @@ describe('Messages are sent between multiple instances', () => {
   });
 
   it('nodeA and nodeB have received the message', () => {
-    expect(callbackA).to.have.been.calledWith({ val: 'y' });
-    expect(callbackB).to.have.been.calledWith({ val: 'x' });
-    expect(callbackB).to.have.been.calledWith({ val: 'y' });
-    expect(callbackC).to.have.been.calledWith({ val: 'x' });
+    expect(callbackA).toHaveBeenCalledWith({ val: 'y' }, 'node-C');
+    expect(callbackB).toHaveBeenCalledWith({ val: 'x' }, 'node-A');
+    expect(callbackB).toHaveBeenCalledWith({ val: 'y' }, 'node-C');
+    expect(callbackC).toHaveBeenCalledWith({ val: 'x' }, 'node-A');
   });
 
   it('nodeA sends a message', async () => {
     nodeA.send('topic1', { notFor: 'A' });
     await messageTimeout();
-    expect(callbackA).to.not.have.been.calledWith({ notFor: 'A' });
+    expect(callbackA).not.toHaveBeenCalledWith({ notFor: 'A' }, 'node-A');
+    expect(callbackB).toHaveBeenCalledWith({ notFor: 'A' }, 'node-A');
+    expect(callbackC).toHaveBeenCalledWith({ notFor: 'A' }, 'node-A');
   });
 
   it('only connector c has received the message', async () => {
     nodeA.sendDirect('node-C', 'topic1', { onlyFor: 'C' });
     await messageTimeout();
-    expect(callbackA).to.not.have.been.calledWith({ onlyFor: 'C' });
-    expect(callbackB).to.not.have.been.calledWith({ onlyFor: 'C' });
-    expect(callbackC).to.have.been.calledWith({ onlyFor: 'C' });
+    expect(callbackA).not.toHaveBeenCalledWith({ onlyFor: 'C' }, 'node-A');
+    expect(callbackB).not.toHaveBeenCalledWith({ onlyFor: 'C' }, 'node-A');
+    expect(callbackC).toHaveBeenCalledWith({ onlyFor: 'C' }, 'node-A');
   });
 
   it('should remove a peerAddress from the cluster', async () => {
@@ -138,9 +138,10 @@ describe('Messages are sent between multiple instances', () => {
     nodeC.removePeer(addressA);
     await messageTimeout();
     nodeA.send('topic2', { notFor: 'C' });
-    expect(callbackA).to.not.have.been.calledWith({ notFor: 'C' });
-    expect(callbackB).to.not.have.been.calledWith({ notFor: 'C' });
-    expect(callbackC).to.not.have.been.calledWith({ notFor: 'C' });
+    await messageTimeout();
+    expect(callbackA).not.toHaveBeenCalledWith({ notFor: 'C' }, 'node-A');
+    expect(callbackB).not.toHaveBeenCalledWith({ notFor: 'C' }, 'node-A');
+    expect(callbackC).not.toHaveBeenCalledWith({ notFor: 'C' }, 'node-A');
   });
 
   it('nodeB can not be closed more than once.', async () => {
@@ -150,7 +151,7 @@ describe('Messages are sent between multiple instances', () => {
     } catch (e) {
       expect(() => {
         throw e;
-      }).to.throw(/ClusterNode already closed/);
+      }).toThrowError(/ClusterNode already closed/);
     }
     await messageTimeout();
   });
@@ -160,3 +161,4 @@ describe('Messages are sent between multiple instances', () => {
     await nodeC.close();
   });
 });
+

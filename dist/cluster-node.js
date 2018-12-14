@@ -34,8 +34,8 @@ class ClusterNode extends events.EventEmitter {
                                      
                   
                                             
-                               
-                              
+                                  
+                                 
 
   constructor(options        ) {
     super();
@@ -118,7 +118,6 @@ class ClusterNode extends events.EventEmitter {
     Object.keys(this.stateRegistries).forEach((topic) => {
       Object.keys(this.stateRegistries[topic].data).forEach((name) => {
         const serverNames = Array.from(this.stateRegistries[topic].data[name]);
-        serverNames.push(this.serverName);
         const message = {
           topic,
           name,

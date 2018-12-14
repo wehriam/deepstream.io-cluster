@@ -1,32 +1,35 @@
 {
   "name": "deepstream.io-cluster",
-  "version": "0.6.2",
+  "version": "0.7.0",
   "description": "Community supported clustering for Deepstream.io",
   "main": "dist/index.js",
   "scripts": {
-    "build": "rm -rf ./dist; flow-remove-types ./src --out-dir ./dist;",
-    "lint": "yarn lint:js && yarn lint:flow",
-    "lint:staged": "lint-staged",
-    "lint:js": "eslint -c .eslintrc --ignore-path .eslintignore --fix ./src ./test *.js",
-    "lint:flow": "flow --show-all-errors",
-    "flow-typed": "flow-typed install --overwrite",
+    "build": "rm -rf ./dist; flow-remove-types ./src --out-dir ./dist && flow-copy-source ./src ./dist",
+    "flow-typed": "./node_modules/.bin/flow-typed install --overwrite",
     "test": "yarn lint && yarn test:js",
-    "test:js": "cross-env NODE_ENV=test nyc mocha test"
+    "test:js": "cross-env NODE_ENV=test jest --runInBand test",
+    "lint": "npm run lint:js && npm run lint:flow",
+    "lint:js": "eslint -c ./.eslintrc --no-eslintrc --fix .",
+    "lint:flow": "flow --show-all-errors",
+    "coverage": "codecov",
+    "start-pre-commit": "git stash -q --keep-index",
+    "end-pre-commit": "git add -u && git stash pop -q"
   },
-  "nyc": {
-    "require": [
-      "flow-remove-types/register"
+  "pre-commit": [
+    "lint",
+    "start-pre-commit",
+    "build",
+    "end-pre-commit"
+  ],
+  "jest": {
+    "coverageDirectory": "./coverage/",
+    "collectCoverage": true,
+    "collectCoverageFrom": [
+      "src/*.js"
     ],
-    "reporter": [
-      "text-summary",
-      "lcov"
-    ],
-    "exclude": [
-      "test",
-      "dist",
-      "flow-typed"
-    ],
-    "cache": true
+    "transform": {
+      "^.+\\.js(?:\\.flow)?$": "jest-flow-transform"
+    }
   },
   "repository": {
     "type": "git",
@@ -39,38 +42,41 @@
       "eslint -c .eslintrc --ignore-path .eslintignore"
     ]
   },
-  "pre-commit": "lint:staged",
   "dependencies": {
-    "nanomsg-cluster": "^0.4.0"
+    "nanomsg-cluster": "^0.6.0"
   },
   "peerDependencies": {
-    "deepstream.io": "3.1.1"
+    "deepstream.io": "3.1.2"
   },
   "devDependencies": {
-    "babel-eslint": "^8.0.1",
-    "chai": "^4.1.2",
-    "cross-env": "^5.1.0",
-    "deepstream.io": "3.1.1",
+    "babel-eslint": "^10.0.1",
+    "chai": "^4.2.0",
+    "codecov": "^3.1.0",
+    "cross-env": "^5.2.0",
+    "deepstream.io": "3.1.2",
     "deepstream.io-client-js": "^2.3.0",
-    "eslint": "^4.9.0",
-    "eslint-config-bunchtogether": "^1.1.2",
-    "eslint-import-resolver-webpack": "^0.8.3",
-    "eslint-plugin-flowtype": "^2.39.1",
-    "eslint-plugin-flowtype-errors": "^3.3.4",
-    "eslint-plugin-import": "^2.8.0",
-    "eslint-plugin-jsx-a11y": "^6.0.2",
-    "eslint-plugin-react": "^7.4.0",
-    "flow-bin": "^0.57.3",
+    "eslint": "^5.10.0",
+    "eslint-config-bunchtogether": "^1.1.6",
+    "eslint-import-resolver-webpack": "^0.10.1",
+    "eslint-plugin-flowtype": "^3.2.0",
+    "eslint-plugin-flowtype-errors": "^3.6.0",
+    "eslint-plugin-import": "^2.14.0",
+    "eslint-plugin-jest": "^22.1.2",
+    "eslint-plugin-jsx-a11y": "^6.1.2",
+    "eslint-plugin-react": "^7.11.1",
+    "expect": "^23.6.0",
+    "flow-bin": "^0.89.0",
+    "flow-copy-source": "^2.0.2",
     "flow-remove-types": "^1.2.3",
-    "flow-typed": "^2.2.1",
+    "flow-typed": "^2.5.1",
     "ip": "^1.1.5",
-    "lint-staged": "^4.3.0",
-    "mocha": "^4.0.1",
-    "nyc": "^11.2.1",
+    "jest": "^23.6.0",
+    "jest-flow-transform": "^1.0.1",
+    "lint-staged": "^8.1.0",
     "pre-commit": "^1.2.2",
-    "sinon": "^4.0.2",
-    "sinon-chai": "^2.14.0",
-    "uuid": "^3.1.0"
+    "sinon": "^7.2.2",
+    "sinon-chai": "^3.3.0",
+    "uuid": "^3.3.2"
   },
   "bugs": {
     "url": "https://github.com/wehriam/deepstream-cluster/issues"

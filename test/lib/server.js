@@ -23,6 +23,8 @@ module.exports.getServer = async function (serverName: string, host: string, dee
       },
       peerAddresses,
     },
+    serverName,
+    logLevel: 'error',
   });
 
   // Disable Logger to enable debug logging
@@ -33,8 +35,8 @@ module.exports.getServer = async function (serverName: string, host: string, dee
     info: () => {},
     warn: () => {},
   });
-  server.set('logLevel', 'error');
-  server.set('serverName', serverName);
+  // server.set('logLevel', 'error');
+  // server.set('serverName', serverName);
   server.set('showLogo', false);
   await new Promise((resolve, reject) => {
     server.once('started', resolve);

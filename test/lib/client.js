@@ -8,7 +8,7 @@ module.exports.getClient = async function (address:string, username?:string = uu
   const client = DeepstreamClient(address);
   client.on('error', (errorMessage, errorType) => {
     if (errorType !== CONSTANTS.EVENT.UNSOLICITED_MESSAGE && errorType !== CONSTANTS.EVENT.NOT_SUBSCRIBED) {
-      throw new Error(errorType);
+      throw new Error(`${errorType}: ${errorMessage}`);
     }
   });
   await new Promise((resolve, reject) => {
