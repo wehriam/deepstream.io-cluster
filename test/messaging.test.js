@@ -3,10 +3,10 @@
 // Based on deepstream.io-msg-connector-template
 // https://github.com/deepstreamIO/deepstream.io-msg-connector-template
 
-import type { SocketSettings } from '../src/cluster-node';
+import type { SocketSettings } from '../src';
 
 const expect = require('expect');
-const ClusterNode = require('../src/cluster-node');
+const ClusterNode = require('../src');
 const { getRandomPort } = require('./lib/ports');
 
 const HOST = '127.0.0.1';

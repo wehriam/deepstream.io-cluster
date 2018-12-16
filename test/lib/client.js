@@ -1,7 +1,7 @@
 // @flow
 
 const uuid = require('uuid');
-const DeepstreamClient = require('deepstream.io-client-js/src/client');
+const DeepstreamClient = require('deepstream.io-client-js');
 const { CONSTANTS } = require('deepstream.io-client-js');
 
 module.exports.getClient = async function (address:string, username?:string = uuid.v4()):Promise<DeepstreamClient> {

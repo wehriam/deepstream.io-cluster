@@ -5,7 +5,7 @@
 
 const uuid = require('uuid');
 const { EventEmitter } = require('events');
-const ClusterNode = require('../src/cluster-node');
+const ClusterNode = require('../src').default;
 const expect = require('expect');
 
 describe('The cluster node adapter has the correct structure', () => {

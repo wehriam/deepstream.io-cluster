@@ -41,3 +41,5 @@ flow
 
 node_modules
 dist
+
+src.v3/*
