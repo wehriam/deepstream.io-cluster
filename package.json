@@ -4,16 +4,18 @@
   "description": "Community supported clustering for Deepstream.io",
   "main": "dist/index.js",
   "scripts": {
-    "build": "rm -rf ./dist; flow-remove-types ./src --out-dir ./dist && flow-copy-source ./src ./dist",
-    "flow-typed": "./node_modules/.bin/flow-typed install --overwrite",
     "test": "yarn lint && yarn test:js",
     "test:js": "cross-env NODE_ENV=test jest --runInBand test",
-    "lint": "npm run lint:js && npm run lint:flow",
-    "lint:js": "eslint -c ./.eslintrc --no-eslintrc --fix .",
-    "lint:flow": "flow --show-all-errors",
     "coverage": "codecov",
     "start-pre-commit": "git stash -q --keep-index",
-    "end-pre-commit": "git add -u && git stash pop -q"
+    "end-pre-commit": "git add -u && git stash pop -q",
+    "type-check": "tsc --noEmit",
+    "type-check:watch": "npm run type-check -- --watch",
+    "build:types": "tsc",
+    "build:js": "babel src --out-dir lib --extensions \".ts,.tsx\" --source-maps inline",
+    "tsc": "rm -rf dist && tsc && cp ./package.json ./dist/package.json",
+    "lint": "tslint test/*.ts src/*.ts test/**/*.ts src/**/*.ts -t verbose",
+    "lint:fix": "tslint --fix test/*.ts src/*.ts test/**/*.ts src/**/*.ts -t verbose"
   },
   "pre-commit": [
     "lint",
@@ -25,11 +27,20 @@
     "coverageDirectory": "./coverage/",
     "collectCoverage": true,
     "collectCoverageFrom": [
-      "src/*.js"
+      "src/*.ts"
     ],
     "transform": {
-      "^.+\\.js(?:\\.flow)?$": "jest-flow-transform"
-    }
+      "^.+\\.tsx?$": "ts-jest"
+    },
+    "testRegex": "(/__tests__/.*|(\\.|/)(test|spec))\\.tsx?$",
+    "moduleFileExtensions": [
+      "ts",
+      "tsx",
+      "js",
+      "jsx",
+      "json",
+      "node"
+    ]
   },
   "repository": {
     "type": "git",
@@ -49,6 +60,10 @@
     "deepstream.io": "3.1.2"
   },
   "devDependencies": {
+    "@babel/plugin-proposal-class-properties": "^7.2.1",
+    "@babel/plugin-proposal-object-rest-spread": "^7.2.0",
+    "@types/jest": "^23.3.10",
+    "@types/node": "^10.12.15",
     "babel-eslint": "^10.0.1",
     "chai": "^4.2.0",
     "codecov": "^3.1.0",
@@ -76,6 +91,7 @@
     "pre-commit": "^1.2.2",
     "sinon": "^7.2.2",
     "sinon-chai": "^3.3.0",
+    "ts-jest": "^23.10.5",
     "uuid": "^3.3.2"
   },
   "bugs": {

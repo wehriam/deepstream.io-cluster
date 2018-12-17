@@ -1,0 +1,6 @@
+[submodule "deepstream.io"]
+	path = deepstream.io
+	url = https://github.com/deepstreamIO/deepstream.io.git
+[submodule "deepstream.io-client-js"]
+	path = deepstream.io-client-js
+	url = https://github.com/deepstreamIO/deepstream.io-client-js.git

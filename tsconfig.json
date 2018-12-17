@@ -1,0 +1,34 @@
+{
+  "compilerOptions": {
+    "target": "es6",
+    "module": "commonjs",
+    "outDir": "dist",
+    "sourceMap": true,
+    "allowJs": false,
+    "strictNullChecks": true,
+    "types": [
+      "node",
+      "jest"
+    ],
+    "typeRoots": [
+      "node_modules/@types",
+      "deepstream.io/typings"
+    ]
+  },
+  "files": [
+    "./node_modules/@types/node/index.d.ts"
+  ],
+  "include": [
+    "src/*",
+    "src/**/*",
+    "src/**/*.json",
+    "test/*",
+    "test/**/*",
+    "test/**/*.pem",
+    "test/**/*.json",
+    "package.json"
+  ],
+  "exclude": [
+    "node_modules"
+  ]
+}
