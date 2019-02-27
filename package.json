@@ -1,6 +1,6 @@
 {
   "name": "deepstream.io-cluster",
-  "version": "0.8.1",
+  "version": "0.8.2",
   "description": "Community supported clustering for Deepstream.io",
   "main": "dist/index.js",
   "scripts": {
