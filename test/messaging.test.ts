@@ -5,6 +5,8 @@
 import expect from 'expect'
 import ClusterNode from '../src'
 import { getRandomPort } from './lib/ports'
+import servicesMock from './lib/mock-services'
+import { get as getDefaultOptions} from 'deepstream.io/src/default-options'
 
 const HOST = '127.0.0.1'
 const NANOMSG_PUBSUB_PORT_A = getRandomPort()
@@ -35,13 +37,9 @@ const addressC = {
 const messageTimeout = () => new Promise(resolve => setTimeout(resolve, 250))
 
 const getNode = async (serverName: string, bindAddress: SocketSettings, peerAddresses: Array<SocketSettings>): Promise<ClusterNode> => {
-  const node = new ClusterNode({
-    serverName,
-    cluster: {
-      bindAddress,
-      peerAddresses,
-    },
-  })
+  const options = getDefaultOptions();
+  options.serverName = serverName;
+  const node = new ClusterNode(options, servicesMock, "example")
   expect(node.isReady).toEqual(false)
   await new Promise((resolve, reject) => {
     node.on('ready', resolve)

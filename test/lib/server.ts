@@ -1,8 +1,12 @@
 
-import path from 'path'
-import Deepstream from '../../deepstream.io/src/deepstream.io'
+import { resolve as resolvePath} from 'path'
+import { Deepstream } from 'deepstream.io'
 
-export const getServer = async function (serverName: string, host: string, deepstreamPort: number, pubsubPort: number, pipelinePort: number, peerAddresses?: Array<SocketSettings> = []): Promise<Deepstream> {
+export interface TestServer extends Deepstream {
+  shutdown: () => Promise<void>,
+}
+
+export const getServer = async function (serverName: string, host: string, deepstreamPort: number, pubsubPort: number, pipelinePort: number, peerAddresses: Array<SocketSettings> = []): Promise<TestServer> {
   const server = new Deepstream({
     serverName,
     connectionEndpoints: {
@@ -15,7 +19,7 @@ export const getServer = async function (serverName: string, host: string, deeps
     },
     plugins: {
       cluster: {
-        name: path.resolve(__dirname, '../../src'),
+        name: resolvePath(__dirname, '../../src'),
         options: {
           serverName,
           cluster: {

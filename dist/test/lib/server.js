@@ -9,10 +9,10 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 const path_1 = require("path");
-const deepstream_io_1 = require("../../deepstream.io/src/deepstream.io");
+const deepstream_io_1 = require("deepstream.io");
 exports.getServer = function (serverName, host, deepstreamPort, pubsubPort, pipelinePort, peerAddresses = []) {
     return __awaiter(this, void 0, void 0, function* () {
-        const server = new deepstream_io_1.default({
+        const server = new deepstream_io_1.Deepstream({
             serverName,
             connectionEndpoints: {
                 websocket: {
@@ -24,7 +24,7 @@ exports.getServer = function (serverName, host, deepstreamPort, pubsubPort, pipe
             },
             plugins: {
                 cluster: {
-                    name: path_1.default.resolve(__dirname, '../../src'),
+                    name: path_1.resolve(__dirname, '../../src'),
                     options: {
                         serverName,
                         cluster: {

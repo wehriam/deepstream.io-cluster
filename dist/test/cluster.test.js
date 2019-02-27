@@ -72,7 +72,6 @@ describe('Cluster', () => {
             const recordA = clientA.record.getRecord(name);
             recordA.subscribe(data => {
                 if (data.value === value) {
-                    recordA.unsubscribe();
                     recordA.discard();
                     resolve();
                 }
@@ -82,7 +81,6 @@ describe('Cluster', () => {
             const recordB = clientB.record.getRecord(name);
             recordB.subscribe(data => {
                 if (data.value === value) {
-                    recordB.unsubscribe();
                     recordB.discard();
                     resolve();
                 }
@@ -93,7 +91,6 @@ describe('Cluster', () => {
         recordC.set({ value });
         yield subscribeAPromise;
         yield subscribeBPromise;
-        recordC.unsubscribe();
         recordC.discard();
     }));
     it('Should make RPC calls.', () => __awaiter(this, void 0, void 0, function* () {
@@ -248,9 +245,9 @@ describe('Cluster', () => {
         const clientD = yield client_1.getClient(`${HOST}:${DEEPSTREAM_PORT_D}`, 'client-D');
         yield new Promise(resolve => {
             const recordD = clientD.record.getRecord(name);
+            // @ts-ignore
             recordD.subscribe(data => {
                 if (data.value === value) {
-                    recordD.unsubscribe();
                     recordD.discard();
                     resolve();
                 }

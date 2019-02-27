@@ -6,29 +6,30 @@
     "sourceMap": true,
     "allowJs": false,
     "strictNullChecks": true,
+    "moduleResolution": "Node",
     "types": [
       "node",
       "jest"
     ],
     "typeRoots": [
-      "node_modules/@types",
-      "deepstream.io/typings"
+      "./node_modules/@types"
     ]
   },
   "files": [
-    "./node_modules/@types/node/index.d.ts"
+    "./node_modules/@types/node/index.d.ts",
+    "./node_modules/@types/jest/index.d.ts",
+    "./deepstream.io-client-js/src/dependencies.d.ts",
+    "./node_modules/deepstream.io-client-js/dist/src/record/record.d.ts",
+    "./deepstream.io/src/typings"
   ],
   "include": [
     "src/*",
     "src/**/*",
-    "src/**/*.json",
-    "test/*",
     "test/**/*",
-    "test/**/*.pem",
-    "test/**/*.json",
     "package.json"
   ],
   "exclude": [
-    "node_modules"
+    "deepstream.io-client-js",
+    "deepstream.io",
   ]
 }

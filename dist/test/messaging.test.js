@@ -13,6 +13,8 @@ Object.defineProperty(exports, "__esModule", { value: true });
 const expect_1 = require("expect");
 const src_1 = require("../src");
 const ports_1 = require("./lib/ports");
+const mock_services_1 = require("./lib/mock-services");
+const default_options_1 = require("deepstream.io/src/default-options");
 const HOST = '127.0.0.1';
 const NANOMSG_PUBSUB_PORT_A = ports_1.getRandomPort();
 const NANOMSG_PUBSUB_PORT_B = ports_1.getRandomPort();
@@ -37,13 +39,9 @@ const addressC = {
 };
 const messageTimeout = () => new Promise(resolve => setTimeout(resolve, 250));
 const getNode = (serverName, bindAddress, peerAddresses) => __awaiter(this, void 0, void 0, function* () {
-    const node = new src_1.default({
-        serverName,
-        cluster: {
-            bindAddress,
-            peerAddresses,
-        },
-    });
+    const options = default_options_1.get();
+    options.serverName = serverName;
+    const node = new src_1.default(options, mock_services_1.default, "example");
     expect_1.default(node.isReady).toEqual(false);
     yield new Promise((resolve, reject) => {
         node.on('ready', resolve);

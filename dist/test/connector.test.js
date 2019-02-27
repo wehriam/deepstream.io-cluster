@@ -10,16 +10,15 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
     });
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-const uuid_1 = require("uuid");
 const events_1 = require("events");
 const src_1 = require("../src");
 const expect_1 = require("expect");
+const mock_services_1 = require("./lib/mock-services");
+const default_options_1 = require("deepstream.io/src/default-options");
 describe('The cluster node adapter has the correct structure', () => {
     let clusterNode;
     beforeAll(() => __awaiter(this, void 0, void 0, function* () {
-        clusterNode = new src_1.default({
-            serverName: uuid_1.default.v4(),
-        });
+        clusterNode = new src_1.default(default_options_1.get(), mock_services_1.default, "example");
         expect_1.default(clusterNode.isReady).toEqual(false);
         yield new Promise((resolve, reject) => {
             clusterNode.on('ready', resolve);

@@ -60,9 +60,9 @@ describe('Scaling', () => {
         const [clientA, clientB] = getRandomClients();
         const subscribeAPromise = new Promise(resolve => {
             const recordA = clientA.record.getRecord(name);
+            // @ts-ignore
             recordA.subscribe(data => {
                 if (data.value === value) {
-                    recordA.unsubscribe();
                     recordA.discard();
                     resolve();
                 }
@@ -71,7 +71,6 @@ describe('Scaling', () => {
         const recordB = clientB.record.getRecord(name);
         recordB.set({ value });
         yield subscribeAPromise;
-        recordB.unsubscribe();
         recordB.discard();
     }));
     it('Should make RPC calls.', () => __awaiter(this, void 0, void 0, function* () {
@@ -114,9 +113,9 @@ describe('Scaling', () => {
         });
         yield new Promise(resolve => {
             const recordB = clientB.record.getRecord(name);
+            // @ts-ignore
             recordB.subscribe(data => {
                 if (data.value === value) {
-                    recordB.unsubscribe();
                     recordB.on('discard', resolve);
                     recordB.discard();
                 }
@@ -129,12 +128,13 @@ describe('Scaling', () => {
         const value = `event-value-${uuid_1.default.v4()}`;
         const [clientA, clientB] = getRandomClients();
         const eventAPromise = new Promise(resolve => {
-            clientA.event.subscribe(name, data => {
+            const handler = data => {
                 if (data.value === value) {
-                    clientA.event.unsubscribe(name);
+                    clientA.event.unsubscribe(name, handler);
                     resolve();
                 }
-            });
+            };
+            clientA.event.subscribe(name, handler);
         });
         clientB.event.emit(name, { value });
         yield eventAPromise;
@@ -147,7 +147,7 @@ describe('Scaling', () => {
         for (let i = 0; i < clients.length; i += 1) {
             const client = clients[i];
             const expectedUsernames = allUsernames.filter(x => x !== `client-${i}`);
-            const usernames = yield new Promise(resolve => client.presence.getAll(resolve));
+            const usernames = yield client.presence.getAll();
             usernames.sort();
             expectedUsernames.sort();
             expect_1.default(usernames).toEqual(expectedUsernames);

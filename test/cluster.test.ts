@@ -89,7 +89,6 @@ describe('Cluster', () => {
       const recordA = clientA.record.getRecord(name)
       recordA.subscribe(data => {
         if (data.value === value) {
-          recordA.unsubscribe()
           recordA.discard()
           resolve()
         }
@@ -99,7 +98,6 @@ describe('Cluster', () => {
       const recordB = clientB.record.getRecord(name)
       recordB.subscribe(data => {
         if (data.value === value) {
-          recordB.unsubscribe()
           recordB.discard()
           resolve()
         }
@@ -110,7 +108,6 @@ describe('Cluster', () => {
     recordC.set({ value })
     await subscribeAPromise
     await subscribeBPromise
-    recordC.unsubscribe()
     recordC.discard()
   })
 
@@ -295,9 +292,9 @@ describe('Cluster', () => {
     const clientD = await getClient(`${HOST}:${DEEPSTREAM_PORT_D}`, 'client-D')
     await new Promise(resolve => {
       const recordD = clientD.record.getRecord(name)
+      // @ts-ignore
       recordD.subscribe(data => {
         if (data.value === value) {
-          recordD.unsubscribe()
           recordD.discard()
           resolve()
         }

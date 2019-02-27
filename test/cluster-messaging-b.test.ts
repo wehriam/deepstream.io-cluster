@@ -1,9 +1,8 @@
 
-import DeepstreamClient from '../deepstream.io-client-js/src/deepstream'
-import Deepstream from '../deepstream.io/src/deepstream.io'
+
 import expect from 'expect'
-import { getServer } from './lib/server'
-import { getClient } from './lib/client'
+import { TestServer, getServer } from './lib/server'
+import { TestClient, getClient } from './lib/client'
 import { getRandomPort } from './lib/ports'
 
 const HOST = '127.0.0.1'
@@ -14,8 +13,8 @@ const CLIENT_COUNT = 8
 
 describe('Cluster Messaging', () => {
   jest.setTimeout(10000)
-  const servers:Array<Deepstream> = []
-  const clients:Array<DeepstreamClient> = []
+  const servers:Array<TestServer> = []
+  const clients:Array<TestClient> = []
 
   const getRandomClients = () => {
     const clientA = clients[Math.floor(Math.random() * clients.length)]
@@ -75,8 +74,8 @@ describe('Cluster Messaging', () => {
         randomizeClientC()
       }
     }
-    const presenceA = new Set(await new Promise(resolve => clientA.presence.getAll(resolve)))
-    const presenceB = new Set(await new Promise(resolve => clientB.presence.getAll(resolve)))
+    const presenceA = new Set(await clientA.presence.getAll());
+    const presenceB = new Set(await clientB.presence.getAll());
     presenceA.add(clientA.username)
     presenceB.add(clientB.username)
     expect(presenceA.size).toEqual(CLIENT_COUNT)
@@ -107,7 +106,7 @@ describe('Cluster Messaging', () => {
       expect(presenceA.size).toEqual(CLIENT_COUNT)
       expect(presenceB.size).toEqual(CLIENT_COUNT)
     }
-    const tempClients:Array<DeepstreamClient> = []
+    const tempClients:Array<TestClient> = []
     for (let i = 0; i < CLIENT_COUNT; i += 1) {
       const tempClient = await getClient(`${HOST}:${DEEPSTREAM_SEED_PORT + (i * 3)}`, `client-temp-${i}`)
       tempClients.push(tempClient)
@@ -123,6 +122,9 @@ describe('Cluster Messaging', () => {
     await new Promise(resolve => setTimeout(resolve, 200))
     while (tempClients.length > 0) {
       const tempClient = tempClients.pop()
+      if(!tempClient) {
+        return;
+      }
       await tempClient.shutdown()
       await new Promise(resolve => setTimeout(resolve, 100))
       expect(presenceA.size).toEqual(CLIENT_COUNT + tempClients.length)

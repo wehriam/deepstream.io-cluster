@@ -62,8 +62,8 @@ describe('Cluster Messaging', () => {
                 randomizeClientC();
             }
         };
-        const presenceA = new Set(yield new Promise(resolve => clientA.presence.getAll(resolve)));
-        const presenceB = new Set(yield new Promise(resolve => clientB.presence.getAll(resolve)));
+        const presenceA = new Set(yield clientA.presence.getAll());
+        const presenceB = new Set(yield clientB.presence.getAll());
         presenceA.add(clientA.username);
         presenceB.add(clientB.username);
         expect_1.default(presenceA.size).toEqual(CLIENT_COUNT);
@@ -112,6 +112,9 @@ describe('Cluster Messaging', () => {
         yield new Promise(resolve => setTimeout(resolve, 200));
         while (tempClients.length > 0) {
             const tempClient = tempClients.pop();
+            if (!tempClient) {
+                return;
+            }
             yield tempClient.shutdown();
             yield new Promise(resolve => setTimeout(resolve, 100));
             expect_1.default(presenceA.size).toEqual(CLIENT_COUNT + tempClients.length);
