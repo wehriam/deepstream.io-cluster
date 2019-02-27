@@ -81,7 +81,7 @@ class ClusterNode extends events.EventEmitter {
       if (serverName) {
         Object.keys(this.stateRegistries).forEach((topic) => this.stateRegistries[topic].removeAll(serverName));
       }
-    }, true);
+    });
 
     this.clusterNode.on('addPeer', () => {
       if (this.requestStateTimeout) {
@@ -92,7 +92,7 @@ class ClusterNode extends events.EventEmitter {
           serverName: this.serverName,
         });
       }, 100);
-    }, true);
+    });
 
     setImmediate(() => {
       this.isReady = true;
@@ -167,7 +167,7 @@ class ClusterNode extends events.EventEmitter {
     return this.clusterNode.removePeer(peerAddress);
   }
 
-  getPeers(): Array<{serverName: string}> {
+  getPeers() {
     return this.clusterNode.getPeers().map((peer) => ({
       serverName: peer.name,
       host: peer.host,
